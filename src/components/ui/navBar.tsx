@@ -101,25 +101,6 @@ const NavBar = () => {
 								}`}>
 			{/* ✅ This inner container matches your content's max-width */}
 			<div className="mx-auto relative flex h-20 container items-center justify-between px-6 sm:px-8">
-				{/* Centered GitHub star button */}
-				<div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden sm:block">
-					<Button
-						className="flex items-center gap-2"
-						onClick={() => window.open(`https://github.com/${repo}`, "_blank")}
-						disabled={starsLoading}
-						title={`Star ${repo} on GitHub`}>
-						<GitBranch />
-						<span>Star repo</span>
-						<div className="w-[1px] h-full bg-white"></div>
-						<Star className=" h-4 w-4" />
-						<span className=" text-sm ">
-							{starCount !== null
-								? new Intl.NumberFormat().format(starCount)
-								: "—"}
-						</span>
-					</Button>
-				</div>
-
 				{/* Logo */}
 				<Link href="http://ramimizyed.dev/" aria-label="Back to homepage">
 					<svg
