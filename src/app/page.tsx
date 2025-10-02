@@ -8,7 +8,7 @@ export default function Home() {
 	return (
 		<main className="w-full min-h-screen">
 			<Loading />
-			<Landing />
+			{/* <Landing /> */}
 			<div className="w-full min-h-screen">
 				<GreenAwarenessPage />
 			</div>
