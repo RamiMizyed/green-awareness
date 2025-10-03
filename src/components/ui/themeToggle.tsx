@@ -86,53 +86,6 @@ export default function SettingsToggle() {
 
 	return (
 		<div className="flex items-center gap-3 relative">
-			<div className="relative">
-				<button
-					onClick={() => setLangDropdownOpen((s) => !s)}
-					className="flex items-center gap-2 bg-secondary cursor-pointer text-secondary-foreground rounded-md px-3 py-2 text-sm font-medium hover:bg-secondary/80 transition">
-					<span>{LANGUAGES.find((l) => l.code === lang)?.flag}</span>
-					<span>{lang.toUpperCase()}</span>
-					<svg
-						className={`w-4 h-4 ml-1 transition-transform ${
-							langDropdownOpen ? "rotate-180" : ""
-						}`}
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24">
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							strokeWidth={2}
-							d="M19 9l-7 7-7-7"
-						/>
-					</svg>
-				</button>
-
-				<AnimatePresence>
-					{langDropdownOpen && (
-						<motion.div
-							initial={{ opacity: 0, y: -10 }}
-							animate={{ opacity: 1, y: 0 }}
-							exit={{ opacity: 0, y: -10 }}
-							transition={{ duration: 0.16 }}
-							className="absolute mt-1 w-32 bg-secondary text-secondary-foreground rounded-md shadow-lg overflow-hidden z-50">
-							{LANGUAGES.map((l) => (
-								<div
-									key={l.code}
-									onClick={() => {
-										handleLangChange(l.code);
-										setLangDropdownOpen(false);
-									}}
-									className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-secondary/70 cursor-pointer transition">
-									<span>{l.flag}</span>
-									<span>{l.label}</span>
-								</div>
-							))}
-						</motion.div>
-					)}
-				</AnimatePresence>
-			</div>
-
 			{/* ---------- START: Staggered Children Reveal Overlay ---------- */}
 			<AnimatePresence>
 				{isTransitioning && (

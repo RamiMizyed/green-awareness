@@ -450,24 +450,24 @@ export default function GreenAwarenessPage() {
 	}
 
 	return (
-		<div className="font-sans min-h-screen py-12">
+		<div className="font-sans min-h-screen flex items-center justify-center mt-10 lg:mt-6 py-12">
 			<main className="container mx-auto px-6">
 				{/* Title */}
-				<div className="flex items-center justify-between mb-8">
+				<div className="flex flex-col lg:flex-row items-center justify-between gap-6 mb-8">
 					<div>
-						<h1 className="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-teal-400">
+						<h1 className="text-4xl text-center lg:text-start lg:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-green-900 to-orange-700 dark:from-green-400  dark:to-orange-400">
 							Green Awareness — Energy & Carbon Calculator
 						</h1>
-						<p className="text-sm text-gray-400 mt-1">
+						<p className="text-sm text-center lg:text-start text-gray-400 mt-1">
 							Track appliances, price per kWh, and emissions. Export or estimate
 							with Climatiq.
 						</p>
 					</div>
-					<div className="flex items-center space-x-3">
+					<div className="flex flex-col   items-center justify-center  gap-3">
 						<Button
 							variant="outline"
 							onClick={exportCsv}
-							className="flex items-center gap-2">
+							className="flex w-full  items-center gap-2">
 							<Download className="w-4 h-4" />
 							<span>Export CSV</span>
 						</Button>
@@ -488,7 +488,7 @@ export default function GreenAwarenessPage() {
 								setError("");
 								setClimatiqResultKg(null);
 							}}
-							className="flex items-center gap-2">
+							className="flex w-full items-center gap-2">
 							<Settings className="w-4 h-4" />
 							<span>Reset</span>
 						</Button>
@@ -616,18 +616,18 @@ export default function GreenAwarenessPage() {
 												</div>
 												<div className="col-span-4">
 													<Input
-														className="bg-transparent"
+														className="bg-transparent w-full"
 														value={it.name}
 														onChange={(e) =>
 															updateCartItem(it.id, { name: e.target.value })
 														}
 													/>
 												</div>
-												<div className="col-span-2">
+												<div className="col-span-2 relative">
 													<Input
 														type="number"
 														min={0}
-														className="bg-transparent"
+														className="bg-transparent w-full"
 														value={String(it.wattage)}
 														onChange={(e) =>
 															updateCartItem(it.id, {
@@ -635,14 +635,19 @@ export default function GreenAwarenessPage() {
 															})
 														}
 													/>
-													<div className="text-xs text-gray-500">W</div>
+													<div className="text-xs text-gray-500 absolute right-[6px] top-[50%] -translate-y-[50%]">
+														W
+													</div>
 												</div>
-												<div className="col-span-2">
+												<div className="col-span-2 relative">
+													<div className="text-xs text-gray-500 absolute right-[6px] top-[50%] -translate-y-[50%]">
+														hrs/day
+													</div>
 													<Input
 														type="number"
 														min={0}
 														step={0.1}
-														className="bg-transparent"
+														className="bg-transparent w-full"
 														value={String(it.hoursPerDay)}
 														onChange={(e) =>
 															updateCartItem(it.id, {
@@ -650,13 +655,12 @@ export default function GreenAwarenessPage() {
 															})
 														}
 													/>
-													<div className="text-xs text-gray-500">hrs/day</div>
 												</div>
-												<div className="col-span-1">
+												<div className="col-span-1 w-full relative">
 													<Input
 														type="number"
 														min={1}
-														className="bg-transparent"
+														className="bg-transparent w-full"
 														value={String(it.qty)}
 														onChange={(e) =>
 															updateCartItem(it.id, {
@@ -664,7 +668,9 @@ export default function GreenAwarenessPage() {
 															})
 														}
 													/>
-													<div className="text-xs text-gray-500">qty</div>
+													<div className="text-xs text-gray-500 absolute right-[6px] top-[50%] -translate-y-[50%]">
+														qty
+													</div>
 												</div>
 												<div className="col-span-2 text-right">
 													<Button
@@ -698,24 +704,13 @@ export default function GreenAwarenessPage() {
 								<div className="mt-4 border-t border-gray-700 pt-4 space-y-4">
 									<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 										<div>
-											<Label className="text-xs text-green-200">
-												Price per kWh
-											</Label>
+											<Label className="text-xs ">Price per kWh</Label>
 											<div className="flex gap-2 mt-1">
-												<Input
-													className="w-12"
-													value={settings.currency}
-													onChange={(e) =>
-														setSettings((s) => ({
-															...s,
-															currency: e.target.value,
-														}))
-													}
-												/>
 												<Input
 													type="number"
 													min={0}
 													step={0.001}
+													placeholder="$"
 													className="w-full"
 													value={settings.pricePerKwh}
 													onChange={(e) =>
@@ -728,7 +723,7 @@ export default function GreenAwarenessPage() {
 											</div>
 										</div>
 										<div className="md:col-span-2">
-											<Label className="text-xs text-green-200 block mb-1">
+											<Label className="text-xs  block mb-1">
 												Carbon Calculation Method
 											</Label>
 											<div className="flex rounded-lg border  p-1 ">
@@ -824,19 +819,19 @@ export default function GreenAwarenessPage() {
 						<CardContent>
 							<div className="mt-4 space-y-2">
 								<p>
-									<strong className="text-2xl text-white">
+									<strong className="text-2xl ">
 										{fmt(totals.kwh.day, 2)}
 									</strong>{" "}
 									kWh/day
 								</p>
 								<p>
-									<strong className="text-lg text-gray-200">
+									<strong className="text-lg ">
 										{fmt(totals.kwh.month, 1)}
 									</strong>{" "}
 									kWh/month
 								</p>
 								<p>
-									<strong className="text-lg text-gray-200">
+									<strong className="text-lg ">
 										{fmt(totals.kwh.year, 0)}
 									</strong>{" "}
 									kWh/year
@@ -854,21 +849,21 @@ export default function GreenAwarenessPage() {
 						<CardContent>
 							<div className="mt-4 space-y-2">
 								<p>
-									<strong className="text-2xl text-white">
+									<strong className="text-2xl ">
 										{settings.currency}
 										{fmt(totals.cost.day, 2)}
 									</strong>{" "}
 									/day
 								</p>
 								<p>
-									<strong className="text-lg text-gray-200">
+									<strong className="text-lg ">
 										{settings.currency}
 										{fmt(totals.cost.month, 2)}
 									</strong>{" "}
 									/month
 								</p>
 								<p>
-									<strong className="text-lg text-gray-200">
+									<strong className="text-lg ">
 										{settings.currency}
 										{fmt(totals.cost.year, 2)}
 									</strong>{" "}
@@ -923,19 +918,19 @@ export default function GreenAwarenessPage() {
 								) : (
 									<div className="space-y-2">
 										<p>
-											<strong className="text-2xl text-white">
+											<strong className="text-2xl ">
 												{fmt(totals.co2.day, 2)}
 											</strong>{" "}
 											kg/day
 										</p>
 										<p>
-											<strong className="text-lg text-gray-200">
+											<strong className="text-lg ">
 												{fmt(totals.co2.month, 1)}
 											</strong>{" "}
 											kg/month
 										</p>
 										<p>
-											<strong className="text-lg text-gray-200">
+											<strong className="text-lg ">
 												{fmt(totals.co2.year, 0)}
 											</strong>{" "}
 											kg/year
