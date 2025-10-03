@@ -36,7 +36,6 @@ import { Input } from "@/components/ui/input";
 import {
 	Select,
 	SelectContent,
-	SelectGroup,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
@@ -609,7 +608,7 @@ export default function GreenAwarenessPage() {
 												initial={{ opacity: 0, y: 6 }}
 												animate={{ opacity: 1, y: 0 }}
 												exit={{ opacity: 0, scale: 0.98 }}
-												className="grid grid-cols-12 gap-3 items-center mb-3 p-3 rounded-lg  border border-zinc-400 dark:border-zinc-500">
+												className="grid grid-cols-4 lg:grid-cols-12 gap-3 items-center mb-3 p-3 rounded-lg  border border-zinc-400 dark:border-zinc-500">
 												<div className="col-span-1 flex items-center justify-center">
 													{APPLIANCE_DATA[it.key as keyof typeof APPLIANCE_DATA]
 														?.icon || <Leaf className="w-5 h-5" />}
