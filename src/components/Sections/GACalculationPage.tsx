@@ -454,7 +454,7 @@ export default function GreenAwarenessPage() {
 				{/* Title */}
 				<div className="flex flex-col lg:flex-row items-center justify-between gap-6 mb-8">
 					<div>
-						<h1 className="text-4xl text-center lg:text-start lg:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-green-900 to-orange-700 dark:from-green-400  dark:to-orange-400">
+						<h1 className="text-4xl text-center lg:text-start lg:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-green-700 to-orange-700 dark:from-green-400  dark:to-orange-400">
 							Green Awareness — Energy & Carbon Calculator
 						</h1>
 						<p className="text-sm text-center lg:text-start text-gray-400 mt-1">
