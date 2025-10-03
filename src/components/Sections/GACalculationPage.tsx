@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
 	Tv,
@@ -175,6 +175,8 @@ const REGION_PRESETS: { label: string; value: number }[] = [
  * Main Component
  * ------------------------*/
 export default function GreenAwarenessPage() {
+	const previousInputRef = useRef<string | null>(null);
+	const throttlingRef = useRef<NodeJS.Timeout | null>(null);
 	// cart of appliances
 	const [cart, setCart] = useState<CartItem[]>(() => {
 		try {
@@ -373,18 +375,10 @@ export default function GreenAwarenessPage() {
 	/** -----------------------
 	 * Optional Climatiq integration (annual)
 	 * ------------------------*/
-	const estimateWithClimatiq = async () => {
+	/** Fixed Climatiq integration using server API route */
+	const estimateWithClimatiq = () => {
 		setError("");
 		setClimatiqResultKg(null);
-
-		// check for env var
-		const apiKey = (process.env.NEXT_PUBLIC_CLIMATIQ_API_KEY || "").trim();
-		if (!apiKey) {
-			setError(
-				"Climatiq API key not configured. Set NEXT_PUBLIC_CLIMATIQ_API_KEY in your environment."
-			);
-			return;
-		}
 
 		const energyKwhYear = totals.kwh.year;
 		if (!energyKwhYear || energyKwhYear <= 0) {
@@ -392,48 +386,66 @@ export default function GreenAwarenessPage() {
 			return;
 		}
 
+		// Create a key based on input to memoize
+		const inputKey = JSON.stringify({
+			energy: energyKwhYear,
+			cart,
+			settings: settings.emissionFactor,
+		});
+
+		// Skip if input hasn't changed
+		if (previousInputRef.current === inputKey) return;
+		previousInputRef.current = inputKey;
+
+		// Throttle multiple rapid calls
+		if (throttlingRef.current) return; // already waiting
+		throttlingRef.current = setTimeout(() => {
+			throttlingRef.current = null;
+		}, 1000); // 1 second throttle
+
 		setLoadingClimatiq(true);
-		try {
-			const resp = await fetch("https://api.climatiq.io/data/v1/estimate", {
-				method: "POST",
-				headers: {
-					Authorization: `Bearer ${apiKey}`,
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({
-					emission_factor: {
-						activity_id: "electricity-supply_grid-source_supplier_mix",
-						source: "EPA",
-						data_version: "^1",
-						region: "US",
-						source_lca_activity: "electricity_generation",
-					},
-					parameters: {
-						energy: energyKwhYear,
-						energy_unit: "kWh",
-					},
-				}),
-			});
 
-			if (!resp.ok) {
-				const err = await resp.json().catch(() => ({}));
-				throw new Error(err.message || "Climatiq returned an error");
-			}
+		(async () => {
+			try {
+				const resp = await fetch("/api/emissions", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						emission_factor: {
+							activity_id: "electricity-supply_grid-source_supplier_mix",
+							source: "EPA",
+							data_version: "^1",
+							region: "US",
+							source_lca_activity: "electricity_generation",
+						},
+						parameters: {
+							energy: energyKwhYear,
+							energy_unit: "kWh",
+						},
+					}),
+				});
 
-			const data = await resp.json();
-			// data.co2e is kg for the supplied energy
-			if (typeof data.co2e === "number") {
-				setClimatiqResultKg(data.co2e);
-			} else {
-				setError("Unexpected Climatiq response.");
+				if (!resp.ok) {
+					const err = await resp.json().catch(() => ({}));
+					throw new Error(err.error || "Server returned an error");
+				}
+
+				const data = await resp.json();
+				if (typeof data.co2e === "number") {
+					setClimatiqResultKg(data.co2e);
+				} else {
+					setError("Unexpected server response.");
+				}
+			} catch (err: unknown) {
+				if (err instanceof Error) setError(err.message);
+				else setError("Unknown error when estimating carbon footprint.");
+				console.error(err);
+			} finally {
+				setLoadingClimatiq(false);
 			}
-		} catch (err: unknown) {
-			if (err instanceof Error) setError(err.message);
-			else setError("Unknown error when calling Climatiq.");
-			console.error(err);
-		} finally {
-			setLoadingClimatiq(false);
-		}
+		})();
 	};
 
 	/** -----------------------
