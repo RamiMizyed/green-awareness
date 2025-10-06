@@ -23,7 +23,10 @@ const LottieAnimator: React.FC<LottieAnimationProps> = ({
 	loop = true,
 	autoplay = true,
 }) => {
-	const [animationData, setAnimationData] = useState<any>(null);
+	const [animationData, setAnimationData] = useState<Record<
+		string,
+		unknown
+	> | null>(null);
 
 	useEffect(() => {
 		let isMounted = true;
