@@ -1,9 +1,6 @@
 "use client";
-
-import GreenAwarenessPage from "@/components/Sections/GACalculationPage";
-import Landing from "@/components/Sections/Landing";
+import GreenAwarenessPage from "@/app/GACalculationPage";
 import Loading from "@/components/ui/loader";
-
 export default function Home() {
 	return (
 		<main
@@ -11,7 +8,6 @@ export default function Home() {
   bg-gradient-to-b from-neutral-50 via-emerald-100/40 to-neutral-100 
   dark:from-zinc-950 dark:via-emerald-900/20 dark:to-neutral-950">
 			<Loading />
-			{/* <Landing /> */}
 			<GreenAwarenessPage />
 		</main>
 	);

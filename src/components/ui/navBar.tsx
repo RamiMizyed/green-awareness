@@ -1,75 +1,12 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useLang } from "@/lib/lang"; // Assuming your lang hook is here
-import { Button } from "../ui/button";
 import SettingsToggle from "./themeToggle";
-import { GitBranch, Star } from "lucide-react";
-
-// --- TRANSLATIONS ---
-const translations = {
-	projects: {
-		en: "Projects",
-		tr: "Projeler",
-		ar: "المشاريع",
-	},
-	contact: {
-		en: "Contact",
-		tr: "İletişim",
-		ar: "تواصل",
-	},
-};
 
 const NavBar = () => {
-	const { lang } = useLang();
 	const [isScrolled, setIsScrolled] = useState(false);
 	const [isScrollingDown, setIsScrollingDown] = useState(false);
 	const lastScrollY = useRef(0);
-
-	// GitHub repo (moved to component scope so JSX can access it)
-	const repo = "RamiMizyed/cv-maker";
-
-	// GitHub stars
-	const [starCount, setStarCount] = useState<number>(3);
-	const [starsLoading, setStarsLoading] = useState(false);
-	useEffect(() => {
-		let mounted = true;
-		const url = `https://api.github.com/repos/${repo}`;
-		setStarsLoading(true);
-		fetch(url)
-			.then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
-			.then((data) => {
-				if (mounted && typeof data.stargazers_count === "number") {
-					setStarCount(data.stargazers_count);
-				}
-			})
-			.catch(() => {
-				if (mounted) setStarCount(3); // Default/fallback value
-			})
-			.finally(() => {
-				if (mounted) setStarsLoading(false);
-			});
-		return () => {
-			mounted = false;
-		};
-	}, [repo]);
-
-	// --- Helper for smooth scrolling ---
-	const scrollToSection = (sectionId: string) => {
-		const section = document.getElementById(sectionId);
-		if (section) {
-			const offset = 100; // Offset to account for the navbar height
-			const bodyRect = document.body.getBoundingClientRect().top;
-			const elementRect = section.getBoundingClientRect().top;
-			const elementPosition = elementRect - bodyRect;
-			const offsetPosition = elementPosition - offset;
-
-			window.scrollTo({
-				top: offsetPosition,
-				behavior: "smooth",
-			});
-		}
-	};
 
 	// --- Optimized Scroll Handler ---
 	useEffect(() => {
