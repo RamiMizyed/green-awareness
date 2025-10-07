@@ -22,7 +22,9 @@ export default function GACalculationPage() {
 	}
 
 	return (
-		<div className="font-sans h-full min-h-screen min-w-full flex items-center justify-center py-[150px]">
+		<div
+			id="Calc"
+			className="font-sans h-full min-h-screen min-w-full flex items-center justify-center bg-background">
 			<main className="container mx-auto px-6">
 				{/* Header */}
 				<div className="flex mt-14 lg:mt-0 flex-col lg:flex-row items-center justify-between gap-6 mb-10">
