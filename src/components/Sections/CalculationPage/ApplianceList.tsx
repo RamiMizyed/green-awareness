@@ -69,14 +69,14 @@ function ApplianceItem({ item }: { item: CartItem }) {
 			<div className="col-span-5 md:col-span-4">
 				{item.key === "custom" ? (
 					<Input
-						className="bg-transparent border-0 font-medium px-1"
+						className=""
 						value={item.name}
 						onChange={(e) => updateCartItem(item.id, { name: e.target.value })}
 						placeholder="Custom Appliance"
 					/>
 				) : (
 					<Select value={item.key} onValueChange={handleApplianceChange}>
-						<SelectTrigger className="bg-transparent border-0 font-medium shadow-none focus:ring-0">
+						<SelectTrigger className="bg-white shadow-md dark:bg-transparent ">
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent>
@@ -154,7 +154,10 @@ type InputProps = React.ComponentProps<"input">;
 // --- Helper Component for Cleaner Inputs ---
 const InputWithLabel = ({ label, icon, ...props }: InputWithLabelProps) => (
 	<div className="relative">
-		<Input className="bg-transparent border-0 text-center pr-8" {...props} />
+		<Input
+			className="bg-white dark:bg-transparent shadow-md border text-center pr-8"
+			{...props}
+		/>
 		<span className="absolute right-3 text-xs text-muted-foreground top-1/2 -translate-y-1/2 pointer-events-none">
 			{label}
 		</span>
@@ -287,7 +290,7 @@ export function ApplianceList() {
 				<div className="flex items-center justify-between mt-4 border-t pt-4">
 					<div className="text-sm flex items-center text-muted-foreground">
 						{cart.length} item(s) — Daily total:
-						<strong className="mx-2 text-yellow-500">
+						<strong className="mx-2 text-blue-500">
 							{totals.kwh.day.toFixed(3)} kWh/day
 						</strong>
 						<LottieAnimator

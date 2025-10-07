@@ -1,106 +1,153 @@
 "use client";
-import React from "react";
+
+import React, { useMemo, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Leaf, TrendingUp, Zap } from "lucide-react";
+import {
+	ChartContainer,
+	ChartTooltip,
+	ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
+	BarChart,
+	Bar,
+	CartesianGrid,
+	XAxis,
+	YAxis,
+	LabelList,
+	ResponsiveContainer,
+} from "recharts";
 
-// Helper for formatting numbers
+const COLORS = [
+	"var(--chart-1)",
+	"var(--chart-2)",
+	"var(--chart-3)",
+	"var(--chart-4)",
+	"var(--chart-5)",
+	"var(--chart-6)",
+];
+
 const fmt = (n: number, digits = 2) =>
 	n.toLocaleString(undefined, {
 		minimumFractionDigits: digits,
 		maximumFractionDigits: digits,
 	});
 
-export function SummaryResults() {
-	const { getTotals, settings } = useAppStore();
-	const totals = getTotals(); // Get the derived state
+export function SummaryInteractiveChart() {
+	const { cart, getTotals, settings } = useAppStore();
+	const totals = getTotals();
+	const [activeMetric, setActiveMetric] = useState<"kwh" | "cost" | "co2">(
+		"kwh"
+	);
 
-	const renderCo2Content = () => {
-		// Default manual/preset calculation
-		return (
-			<div className="grid grid-cols-3 gap-4 text-center">
-				<div>
-					<p className="text-2xl font-bold">{fmt(totals.co2.day, 2)}</p>
-					<p className="text-sm text-muted-foreground">kg CO₂e/day</p>
-				</div>
-				<div>
-					<p className="text-2xl font-bold">{fmt(totals.co2.month, 1)}</p>
-					<p className="text-sm text-muted-foreground">kg CO₂e/month</p>
-				</div>
-				<div>
-					<p className="text-2xl font-bold">{fmt(totals.co2.year, 0)}</p>
-					<p className="text-sm text-muted-foreground">kg CO₂e/year</p>
-				</div>
-			</div>
-		);
-	};
+	const chartData = useMemo(() => {
+		return cart.map((item, i) => {
+			const kwh = (item.wattage * item.hoursPerDay * item.qty) / 1000;
+			const cost = kwh * settings.pricePerKwh;
+			const co2 = kwh * settings.emissionFactor;
+
+			return {
+				name: item.name,
+				kwh,
+				cost,
+				co2,
+				fill: COLORS[i % COLORS.length],
+			};
+		});
+	}, [cart, settings]);
+
+	const metricConfig = {
+		kwh: {
+			label: "Energy Usage",
+			unit: "kWh/day",
+			icon: <Zap className="h-4 w-4 text-muted-foreground" />,
+		},
+		cost: {
+			label: "Estimated Cost",
+			unit: `${settings.currency}/day`,
+			icon: <TrendingUp className="h-4 w-4 text-muted-foreground" />,
+		},
+		co2: {
+			label: "Carbon Footprint",
+			unit: "kg CO₂e/day",
+			icon: <Leaf className="h-4 w-4 text-muted-foreground" />,
+		},
+	} as const;
+
+	const total = useMemo(
+		() => ({
+			kwh: totals.kwh.day,
+			cost: totals.cost.day,
+			co2: totals.co2.day,
+		}),
+		[totals]
+	);
 
 	return (
-		<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-			<Card>
-				<CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-					<CardTitle className="text-sm font-medium">
-						Energy Consumption
-					</CardTitle>
-					<Zap className="h-4 w-4 text-muted-foreground" />
-				</CardHeader>
-				<CardContent>
-					<div className="grid grid-cols-3 gap-4 text-center">
-						<div>
-							<p className="text-2xl font-bold">{fmt(totals.kwh.day, 2)}</p>
-							<p className="text-sm text-muted-foreground">kWh/day</p>
-						</div>
-						<div>
-							<p className="text-2xl font-bold">{fmt(totals.kwh.month, 1)}</p>
-							<p className="text-sm text-muted-foreground">kWh/month</p>
-						</div>
-						<div>
-							<p className="text-2xl font-bold">{fmt(totals.kwh.year, 0)}</p>
-							<p className="text-sm text-muted-foreground">kWh/year</p>
-						</div>
+		<Card className="mt-4">
+			<div className="max-w-4xl mx-auto">
+				<CardHeader className="flex flex-col sm:flex-row border-b !p-0">
+					<div className="flex flex-1 flex-col justify-center gap-1 px-6 pt-4 pb-3 sm:!py-0">
+						<CardTitle>Energy Summary</CardTitle>
 					</div>
-				</CardContent>
-			</Card>
-			<Card>
-				<CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-					<CardTitle className="text-sm font-medium">Estimated Cost</CardTitle>
-					<TrendingUp className="h-4 w-4 text-muted-foreground" />
-				</CardHeader>
-				<CardContent>
-					<div className="grid grid-cols-3 gap-4 text-center">
-						<div>
-							<p className="text-2xl font-bold">
-								{settings.currency}
-								{fmt(totals.cost.day, 2)}
-							</p>
-							<p className="text-sm text-muted-foreground">Per Day</p>
-						</div>
-						<div>
-							<p className="text-2xl font-bold">
-								{settings.currency}
-								{fmt(totals.cost.month, 2)}
-							</p>
-							<p className="text-sm text-muted-foreground">Per Month</p>
-						</div>
-						<div>
-							<p className="text-2xl font-bold">
-								{settings.currency}
-								{fmt(totals.cost.year, 2)}
-							</p>
-							<p className="text-sm text-muted-foreground">Per Year</p>
-						</div>
+					<div className="flex">
+						{(["kwh", "cost", "co2"] as const).map((metric) => (
+							<button
+								key={metric}
+								data-active={activeMetric === metric}
+								className="data-[active=true]:bg-muted/50 relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
+								onClick={() => setActiveMetric(metric)}>
+								<span className="text-muted-foreground text-xs">
+									{metricConfig[metric].label}
+								</span>
+								<span className="text-lg leading-none font-bold sm:text-3xl">
+									{fmt(total[metric], 2)}
+								</span>
+							</button>
+						))}
 					</div>
-				</CardContent>
-			</Card>
-			<Card>
-				<CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-					<CardTitle className="text-sm font-medium">
-						Carbon Footprint
-					</CardTitle>
-					<Leaf className="h-4 w-4 text-muted-foreground" />
 				</CardHeader>
-				<CardContent>{renderCo2Content()}</CardContent>
-			</Card>
-		</div>
+				<CardContent className="px-2 sm:p-6">
+					<ChartContainer
+						config={{
+							[activeMetric]: {
+								label: metricConfig[activeMetric].unit,
+								color: "var(--chart-1)",
+							},
+						}}>
+						<BarChart
+							data={chartData}
+							margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+							<CartesianGrid vertical={false} strokeDasharray="3 3" />
+							<XAxis dataKey="name" tickLine={false} axisLine={false} />
+							<YAxis hide />
+							<ChartTooltip
+								cursor={{ fill: "rgba(0,0,0,0.05)" }}
+								content={
+									<ChartTooltipContent
+										formatter={(value) =>
+											`${fmt(Number(value), 2)} ${
+												metricConfig[activeMetric].unit
+											}`
+										}
+									/>
+								}
+							/>
+							<Bar dataKey={activeMetric}>
+								<LabelList
+									dataKey={activeMetric}
+									position="top"
+									className="fill-foreground text-xs"
+									formatter={(value: number) =>
+										`${fmt(value, 2)} ${metricConfig[activeMetric].unit}`
+									}
+								/>
+							</Bar>
+						</BarChart>
+					</ChartContainer>
+				</CardContent>
+			</div>
+		</Card>
 	);
 }

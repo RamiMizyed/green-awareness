@@ -1,10 +1,10 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Download, Settings } from "lucide-react";
+import { Download, Github, Settings } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { ApplianceList } from "@/components/Sections/CalculationPage/ApplianceList";
-import { SummaryResults } from "@/components/Sections/CalculationPage/SummaryResults";
+import { SummaryInteractiveChart } from "@/components/Sections/CalculationPage/SummaryResults";
 
 // Import your new smaller components
 
@@ -24,16 +24,18 @@ export default function GACalculationPage() {
 	return (
 		<div
 			id="Calc"
-			className="font-sans h-full min-h-screen min-w-full flex items-center justify-center bg-background">
+			className="font-sans h-full min-h-screen py-10 min-w-full flex items-center justify-center bg-background">
 			<main className="container mx-auto px-6">
 				{/* Header */}
-				<div className="flex mt-14 lg:mt-0 flex-col lg:flex-row items-center justify-between gap-6 mb-10">
+				<div className="flex lg:mt-0 flex-col lg:flex-row items-center justify-between gap-6 mb-10">
 					<div>
 						<h1 className="text-4xl lg:text-5xl font-extrabold">
 							Green Awareness Calculator
 						</h1>
-						<p className="text-sm text-center lg:text-start text-gray-400 mt-3">
-							Track appliances, costs, and emissions.
+						<p className="text-base  max-w-3xl mx-auto mt-3  ">
+							Green Awareness is an open source project built by the community{" "}
+							<br /> for the community. Check out the code, contribute, or give
+							it a star on GitHub!
 						</p>
 					</div>
 					<div className="flex items-center gap-3">
@@ -43,6 +45,17 @@ export default function GACalculationPage() {
 						<Button variant="outline" onClick={reset}>
 							<Settings className="w-4 h-4 mr-2" /> Reset
 						</Button>
+						<Button
+							variant="outline"
+							className=""
+							onClick={() =>
+								window.open(
+									"https://github.com/RamiMizyed/green-awareness",
+									"_blank"
+								)
+							}>
+							Visit GitHub <Github className="w-5 h-5 ml-2" />
+						</Button>
 					</div>
 				</div>
 
@@ -50,7 +63,7 @@ export default function GACalculationPage() {
 					<ApplianceList />
 				</div>
 
-				<SummaryResults />
+				<SummaryInteractiveChart />
 			</main>
 		</div>
 	);

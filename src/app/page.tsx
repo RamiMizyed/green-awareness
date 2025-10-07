@@ -11,6 +11,19 @@ export default function Home() {
 			<Loading />
 			<LandingPage />
 			<GreenAwarenessPage />
+			<footer className="relative z-10 bg-black/30 py-6 text-center text-gray-300">
+				<p>
+					&copy; {new Date().getFullYear()} Green Awareness. All rights
+					reserved.
+				</p>
+				<a
+					href="https://github.com/RamiMizyed/green-awareness"
+					target="_blank"
+					rel="noopener noreferrer"
+					className="text-green-200 hover:underline">
+					Contribute on GitHub
+				</a>
+			</footer>
 		</main>
 	);
 }
