@@ -17,137 +17,207 @@ import {
 	YAxis,
 	LabelList,
 	ResponsiveContainer,
+	Cell,
 } from "recharts";
+import LottieAnimator from "@/components/ui/lottieAnimator";
 
-const COLORS = [
-	"var(--chart-1)",
-	"var(--chart-2)",
-	"var(--chart-3)",
-	"var(--chart-4)",
-	"var(--chart-5)",
-	"var(--chart-6)",
+// --- Color palettes for a polished look in both themes ---
+const LIGHT_MODE_COLORS = [
+	"#1d4ed8",
+	"#db2777",
+	"#f59e0b",
+	"#16a34a",
+	"#6d28d9",
+];
+const DARK_MODE_COLORS = [
+	"#60a5fa",
+	"#f472b6",
+	"#fb923c",
+	"#4ade80",
+	"#c084fc",
 ];
 
-const fmt = (n: number, digits = 2) =>
-	n.toLocaleString(undefined, {
+const formatNumber = (num: number, digits = 2) =>
+	new Intl.NumberFormat("en-US", {
 		minimumFractionDigits: digits,
 		maximumFractionDigits: digits,
-	});
+	}).format(num);
+
+const formatTick = (tick: string) => {
+	const limit = 15;
+	if (tick.length > limit) {
+		return tick.substring(0, limit) + "...";
+	}
+	return tick;
+};
 
 export function SummaryInteractiveChart() {
 	const { cart, getTotals, settings } = useAppStore();
-	const totals = getTotals();
 	const [activeMetric, setActiveMetric] = useState<"kwh" | "cost" | "co2">(
 		"kwh"
 	);
 
+	const metricConfig = useMemo(
+		() => ({
+			kwh: {
+				label: "Energy Usage",
+				unit: "kWh",
+				icon: <Zap className="h-5 w-5" />,
+				activeColor:
+					"data-[active=true]:border-blue-500 data-[active=true]:bg-blue-50 dark:data-[active=true]:bg-blue-950",
+			},
+			cost: {
+				label: "Estimated Cost",
+				unit: settings.currency,
+				icon: <TrendingUp className="h-5 w-5" />,
+				activeColor:
+					"data-[active=true]:border-pink-500 data-[active=true]:bg-pink-50 dark:data-[active=true]:bg-pink-950",
+			},
+			co2: {
+				label: "Carbon Footprint",
+				unit: "CO₂e",
+				icon: <Leaf className="h-5 w-5" />,
+				activeColor:
+					"data-[active=true]:border-amber-500 data-[active=true]:bg-amber-50 dark:data-[active=true]:bg-amber-950",
+			},
+		}),
+		[settings.currency]
+	);
+
 	const chartData = useMemo(() => {
+		// NOTE: Use a theme context in a real app to switch colors
+		const colors =
+			window.matchMedia &&
+			window.matchMedia("(prefers-color-scheme: dark)").matches
+				? DARK_MODE_COLORS
+				: LIGHT_MODE_COLORS;
 		return cart.map((item, i) => {
 			const kwh = (item.wattage * item.hoursPerDay * item.qty) / 1000;
 			const cost = kwh * settings.pricePerKwh;
 			const co2 = kwh * settings.emissionFactor;
-
 			return {
 				name: item.name,
 				kwh,
 				cost,
 				co2,
-				fill: COLORS[i % COLORS.length],
+				fill: colors[i % colors.length],
 			};
 		});
 	}, [cart, settings]);
 
-	const metricConfig = {
-		kwh: {
-			label: "Energy Usage",
-			unit: "kWh/day",
-			icon: <Zap className="h-4 w-4 text-muted-foreground" />,
-		},
-		cost: {
-			label: "Estimated Cost",
-			unit: `${settings.currency}/day`,
-			icon: <TrendingUp className="h-4 w-4 text-muted-foreground" />,
-		},
-		co2: {
-			label: "Carbon Footprint",
-			unit: "kg CO₂e/day",
-			icon: <Leaf className="h-4 w-4 text-muted-foreground" />,
-		},
-	} as const;
+	const totals = useMemo(() => {
+		const t = getTotals();
+		return { kwh: t.kwh.day, cost: t.cost.day, co2: t.co2.day };
+	}, [getTotals]);
 
-	const total = useMemo(
-		() => ({
-			kwh: totals.kwh.day,
-			cost: totals.cost.day,
-			co2: totals.co2.day,
-		}),
-		[totals]
-	);
+	const chartConfig = {
+		[activeMetric]: { label: metricConfig[activeMetric].label },
+	};
 
 	return (
-		<Card className="mt-4">
-			<div className="max-w-4xl mx-auto">
-				<CardHeader className="flex flex-col sm:flex-row border-b !p-0">
-					<div className="flex flex-1 flex-col justify-center gap-1 px-6 pt-4 pb-3 sm:!py-0">
-						<CardTitle>Energy Summary</CardTitle>
-					</div>
-					<div className="flex">
-						{(["kwh", "cost", "co2"] as const).map((metric) => (
+		<Card className="mt-8 w-full rounded-xl border bg-card text-card-foreground shadow-sm">
+			<CardHeader className="flex flex-col gap-6 p-6 sm:flex-row sm:items-start sm:justify-between">
+				<div className="flex items-center gap-4">
+					<LottieAnimator
+						src="/animationAssets/Solar Sun Power Animation.json"
+						className="h-16 w-16"
+						loop
+						autoplay
+					/>
+					<CardTitle className="text-2xl font-semibold">
+						Energy Summary
+					</CardTitle>
+				</div>
+				<div className="grid w-full grid-cols-1 gap-3 sm:max-w-md lg:max-w-xl sm:grid-cols-3">
+					{(Object.keys(metricConfig) as Array<keyof typeof metricConfig>).map(
+						(metric) => (
 							<button
 								key={metric}
 								data-active={activeMetric === metric}
-								className="data-[active=true]:bg-muted/50 relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
-								onClick={() => setActiveMetric(metric)}>
-								<span className="text-muted-foreground text-xs">
-									{metricConfig[metric].label}
-								</span>
-								<span className="text-lg leading-none font-bold sm:text-3xl">
-									{fmt(total[metric], 2)}
-								</span>
+								onClick={() => setActiveMetric(metric)}
+								className={`rounded-lg border-2 p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring 
+                                        border-transparent hover:bg-muted/50
+                                        ${metricConfig[metric].activeColor}`}>
+								<div className="flex items-center gap-2 text-muted-foreground">
+									{metricConfig[metric].icon}
+									<span className="text-sm font-medium">
+										{metricConfig[metric].label}
+									</span>
+								</div>
+								<div className="mt-2 flex items-baseline gap-2">
+									<span className="text-2xl font-bold tracking-tight text-foreground">
+										{formatNumber(totals[metric])}
+									</span>
+									<span className="text-sm font-medium text-muted-foreground">
+										{metricConfig[metric].unit}/day
+									</span>
+								</div>
 							</button>
-						))}
-					</div>
-				</CardHeader>
-				<CardContent className="px-2 sm:p-6">
-					<ChartContainer
-						config={{
-							[activeMetric]: {
-								label: metricConfig[activeMetric].unit,
-								color: "var(--chart-1)",
-							},
-						}}>
+						)
+					)}
+				</div>
+			</CardHeader>
+
+			<CardContent className="px-2 pt-0 sm:px-6 sm:pb-6">
+				<ChartContainer config={chartConfig} className="min-h-72 w-full">
+					<ResponsiveContainer
+						width="100%"
+						height={Math.max(280, cart.length * 40)}>
 						<BarChart
 							data={chartData}
-							margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
-							<CartesianGrid vertical={false} strokeDasharray="3 3" />
-							<XAxis dataKey="name" tickLine={false} axisLine={false} />
-							<YAxis hide />
+							layout="vertical"
+							margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
+							<CartesianGrid
+								horizontal={false}
+								stroke="hsl(var(--border) / 0.5)"
+							/>
+							<XAxis
+								type="number"
+								stroke="hsl(var(--muted-foreground))"
+								tickLine={false}
+								axisLine={false}
+								tickFormatter={(value) => formatNumber(Number(value), 1)}
+								label={{
+									value: `${metricConfig[activeMetric].label} (${metricConfig[activeMetric].unit}/day)`,
+									position: "insideBottom",
+									offset: -15,
+									className: "fill-muted-foreground text-sm",
+								}}
+							/>
+							<YAxis
+								type="category"
+								dataKey="name"
+								stroke="hsl(var(--muted-foreground))"
+								tickLine={false}
+								axisLine={false}
+								width={120}
+								tickFormatter={formatTick}
+							/>
 							<ChartTooltip
-								cursor={{ fill: "rgba(0,0,0,0.05)" }}
+								cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
 								content={
 									<ChartTooltipContent
-										formatter={(value) =>
-											`${fmt(Number(value), 2)} ${
-												metricConfig[activeMetric].unit
-											}`
-										}
+										formatter={(value) => formatNumber(Number(value))}
+										hideLabel
 									/>
 								}
 							/>
-							<Bar dataKey={activeMetric}>
+							<Bar dataKey={activeMetric} radius={[0, 4, 4, 0]}>
 								<LabelList
 									dataKey={activeMetric}
-									position="top"
-									className="fill-foreground text-xs"
-									formatter={(value: number) =>
-										`${fmt(value, 2)} ${metricConfig[activeMetric].unit}`
-									}
+									position="right"
+									offset={8}
+									className="fill-foreground text-xs font-medium"
+									formatter={(value: number) => formatNumber(value)}
 								/>
+								{chartData.map((entry) => (
+									<Cell key={`cell-${entry.name}`} fill={entry.fill} />
+								))}
 							</Bar>
 						</BarChart>
-					</ChartContainer>
-				</CardContent>
-			</div>
+					</ResponsiveContainer>
+				</ChartContainer>
+			</CardContent>
 		</Card>
 	);
 }

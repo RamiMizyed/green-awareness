@@ -45,7 +45,7 @@ const sectionVariants: Variants = {
 
 export default function LandingPage() {
 	return (
-		<div className="font-sans relative overflow-hidden min-h-[70svh] min-w-full transition-colors duration-300">
+		<div className="font-sans relative overflow-hidden py-[10vh]  min-w-full transition-colors duration-300">
 			{/* Video Background */}
 			<video
 				loop
