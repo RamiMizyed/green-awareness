@@ -55,9 +55,9 @@ function ApplianceItem({ item }: { item: CartItem }) {
 			initial={{ opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
 			exit={{ opacity: 0, x: -20, transition: { duration: 0.25 } }}
-			className="grid grid-cols-6 md:grid-cols-12 gap-x-2 md:gap-x-4 items-center  justify-center  p-2 rounded-lg border bg-secondary/50 mb-2">
+			className="grid grid-cols-7 md:grid-cols-12 gap-x-2 md:gap-x-4 items-center  justify-center  p-2 rounded-lg border bg-secondary/50 mb-2">
 			{/* Column 1: Icon */}
-			<div className="col-span-1 flex items-center justify-start">
+			<div className="col-span-1 hidden lg:flex items-center justify-start">
 				<div className="w-9 h-9 flex items-center justify-center bg-white/80 rounded-full text-muted-foreground">
 					{APPLIANCE_DATA[item.key as ApplianceKey]?.icon || (
 						<Leaf className="w-5 h-5 text-yellow-500" />
@@ -66,7 +66,7 @@ function ApplianceItem({ item }: { item: CartItem }) {
 			</div>
 
 			{/* Column 2: Name (Select or Input) */}
-			<div className="col-span-5 md:col-span-4">
+			<div className="col-span-3 md:col-span-4">
 				{item.key === "custom" ? (
 					<Input
 						className=""
@@ -91,7 +91,7 @@ function ApplianceItem({ item }: { item: CartItem }) {
 			</div>
 
 			{/* Column 3, 4, 5: Inputs (Stacked on mobile, row on desktop) */}
-			<div className="col-span-2 md:col-span-2">
+			<div className="col-span-1 md:col-span-2">
 				<InputWithLabel
 					label="W"
 					icon={<Power size={14} />}
@@ -103,7 +103,7 @@ function ApplianceItem({ item }: { item: CartItem }) {
 					}
 				/>
 			</div>
-			<div className="col-span-2 md:col-span-2">
+			<div className="col-span-1 md:col-span-2">
 				<InputWithLabel
 					label="hrs"
 					icon={<Clock size={14} />}
@@ -116,7 +116,7 @@ function ApplianceItem({ item }: { item: CartItem }) {
 					}
 				/>
 			</div>
-			<div className="col-span-2 md:col-span-2">
+			<div className="col-span-1 md:col-span-2">
 				<InputWithLabel
 					label="qty"
 					icon={<Hash size={14} />}
@@ -131,7 +131,7 @@ function ApplianceItem({ item }: { item: CartItem }) {
 			</div>
 
 			{/* Column 6: Delete Button */}
-			<div className="col-span-6 md:col-span-1 flex items-center justify-end">
+			<div className="col-span-1 md:col-span-1 flex items-center justify-end">
 				<motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
 					<Button
 						variant="ghost"
@@ -265,7 +265,9 @@ export function ApplianceList() {
 	return (
 		<Card className="w-full">
 			<CardHeader>
-				<CardTitle>Your Appliances & Settings</CardTitle>
+				<CardTitle className="text-2xl font-semibold">
+					Your Appliances & Settings
+				</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<AnimatePresence mode="wait">

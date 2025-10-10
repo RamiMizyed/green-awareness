@@ -115,16 +115,10 @@ export function SummaryInteractiveChart() {
 	};
 
 	return (
-		<Card className="mt-8 w-full rounded-xl border bg-card text-card-foreground shadow-sm">
-			<CardHeader className="flex flex-col gap-6 p-6 sm:flex-row sm:items-start sm:justify-between">
-				<div className="flex items-center gap-4">
-					<LottieAnimator
-						src="/animationAssets/Solar Sun Power Animation.json"
-						className="h-16 w-16"
-						loop
-						autoplay
-					/>
-					<CardTitle className="text-2xl font-semibold">
+		<Card className="mt-4 px-6 w-full rounded-xl border bg-card text-card-foreground shadow-sm">
+			<div className="flex flex-col lg:flex-row items-center justify-between">
+				<div className="flex h-full items-center justify-center gap-4">
+					<CardTitle className="text-2xl mb-3 font-semibold">
 						Energy Summary
 					</CardTitle>
 				</div>
@@ -135,7 +129,7 @@ export function SummaryInteractiveChart() {
 								key={metric}
 								data-active={activeMetric === metric}
 								onClick={() => setActiveMetric(metric)}
-								className={`rounded-lg border-2 p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring 
+								className={`rounded-lg cursor-pointer border-2 p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring 
                                         border-transparent hover:bg-muted/50
                                         ${metricConfig[metric].activeColor}`}>
 								<div className="flex items-center gap-2 text-muted-foreground">
@@ -156,67 +150,83 @@ export function SummaryInteractiveChart() {
 						)
 					)}
 				</div>
-			</CardHeader>
+			</div>
 
-			<CardContent className="px-2 pt-0 sm:px-6 sm:pb-6">
-				<ChartContainer config={chartConfig} className="min-h-72 w-full">
-					<ResponsiveContainer
-						width="100%"
-						height={Math.max(280, cart.length * 40)}>
-						<BarChart
-							data={chartData}
-							layout="vertical"
-							margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
-							<CartesianGrid
-								horizontal={false}
-								stroke="hsl(var(--border) / 0.5)"
-							/>
-							<XAxis
-								type="number"
-								stroke="hsl(var(--muted-foreground))"
-								tickLine={false}
-								axisLine={false}
-								tickFormatter={(value) => formatNumber(Number(value), 1)}
-								label={{
-									value: `${metricConfig[activeMetric].label} (${metricConfig[activeMetric].unit}/day)`,
-									position: "insideBottom",
-									offset: -15,
-									className: "fill-muted-foreground text-sm",
-								}}
-							/>
-							<YAxis
-								type="category"
-								dataKey="name"
-								stroke="hsl(var(--muted-foreground))"
-								tickLine={false}
-								axisLine={false}
-								width={120}
-								tickFormatter={formatTick}
-							/>
-							<ChartTooltip
-								cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
-								content={
-									<ChartTooltipContent
-										formatter={(value) => formatNumber(Number(value))}
-										hideLabel
-									/>
-								}
-							/>
-							<Bar dataKey={activeMetric} radius={[0, 4, 4, 0]}>
-								<LabelList
-									dataKey={activeMetric}
-									position="right"
-									offset={8}
-									className="fill-foreground text-xs font-medium"
-									formatter={(value: number) => formatNumber(value)}
+			<CardContent className="m-6">
+				{chartData.length > 0 ? (
+					<ChartContainer
+						config={chartConfig}
+						className="min-h-64 max-h-80  w-full">
+						<ResponsiveContainer className={""} width="100%">
+							<BarChart data={chartData} layout="vertical" className="">
+								<CartesianGrid
+									horizontal={false}
+									stroke="hsl(var(--border) / 0.5)"
 								/>
-								{chartData.map((entry) => (
-									<Cell key={`cell-${entry.name}`} fill={entry.fill} />
-								))}
-							</Bar>
-						</BarChart>
-					</ResponsiveContainer>
-				</ChartContainer>
+								<XAxis
+									className=""
+									type="number"
+									stroke="hsl(var(--muted-foreground))"
+									tickLine={false}
+									axisLine={false}
+									tickFormatter={(value) => formatNumber(Number(value), 1)}
+									label={{
+										value: `${metricConfig[activeMetric].label} (${metricConfig[activeMetric].unit}/day)`,
+										position: "insideBottom",
+										offset: -10,
+										className: "fill-muted-foreground text-sm",
+									}}
+								/>
+								<YAxis
+									type="category"
+									dataKey="name"
+									stroke="hsl(var(--muted-foreground))"
+									tickLine={false}
+									axisLine={false}
+									width={120}
+									tickFormatter={formatTick}
+								/>
+								<ChartTooltip
+									cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
+									content={
+										<ChartTooltipContent
+											formatter={(value) => formatNumber(Number(value))}
+											hideLabel
+										/>
+									}
+								/>
+								<Bar
+									className=""
+									dataKey={activeMetric}
+									radius={[0, 4, 4, 0]}
+									maxBarSize={80}>
+									<LabelList
+										dataKey={activeMetric}
+										position="right"
+										offset={8}
+										className="fill-foreground text-xs font-medium"
+										formatter={(value: number) => formatNumber(value)}
+									/>
+									{chartData.map((entry) => (
+										<Cell key={`cell-${entry.name}`} fill={entry.fill} />
+									))}
+								</Bar>
+							</BarChart>
+						</ResponsiveContainer>
+					</ChartContainer>
+				) : (
+					<div className="flex flex-col  items-center justify-center text-muted-foreground">
+						<div className="w-full flex items-center justify-center">
+							<LottieAnimator
+								src="/animationAssets/Solar Sun Power Animation.json"
+								className=""
+								loop
+								autoplay
+							/>
+						</div>
+						<p>No data available to display.</p>
+					</div>
+				)}
 			</CardContent>
 		</Card>
 	);
