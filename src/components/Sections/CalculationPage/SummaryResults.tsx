@@ -1,9 +1,12 @@
+// src/components/Sections/CalculationPage/SummaryInteractiveChart.tsx
+
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { useAppStore } from "@/lib/store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Leaf, TrendingUp, Zap } from "lucide-react";
+import { Leaf, TrendingUp, Zap, Car } from "lucide-react";
 import {
 	ChartContainer,
 	ChartTooltip,
@@ -21,7 +24,6 @@ import {
 } from "recharts";
 import LottieAnimator from "@/components/ui/lottieAnimator";
 
-// --- Color palettes for a polished look in both themes ---
 const LIGHT_MODE_COLORS = [
 	"#1d4ed8",
 	"#db2777",
@@ -42,13 +44,27 @@ const formatNumber = (num: number, digits = 2) =>
 		minimumFractionDigits: digits,
 		maximumFractionDigits: digits,
 	}).format(num);
+const formatTick = (tick: string) =>
+	tick.length > 15 ? tick.substring(0, 15) + "..." : tick;
 
-const formatTick = (tick: string) => {
-	const limit = 15;
-	if (tick.length > limit) {
-		return tick.substring(0, limit) + "...";
-	}
-	return tick;
+const RelatabilityTip = ({ kgCO2e }: { kgCO2e: number }) => {
+	// Avg. passenger vehicle emits ~0.404 kg CO₂ per mile.
+	const milesDriven = kgCO2e / 0.404;
+	if (milesDriven < 0.1) return null;
+
+	return (
+		<motion.div
+			initial={{ opacity: 0, y: 10 }}
+			animate={{ opacity: 1, y: 0 }}
+			className="mt-4 flex items-center justify-center gap-3 rounded-lg bg-amber-50 dark:bg-amber-950/50 p-3 text-sm text-amber-800 dark:text-amber-200">
+			<Car className="h-5 w-5 flex-shrink-0" />
+			<p>
+				This is equivalent to the emissions from driving an average car for{" "}
+				<strong className="font-bold">{milesDriven.toFixed(1)} miles</strong>{" "}
+				per day.
+			</p>
+		</motion.div>
+	);
 };
 
 export function SummaryInteractiveChart() {
@@ -75,7 +91,7 @@ export function SummaryInteractiveChart() {
 			},
 			co2: {
 				label: "Carbon Footprint",
-				unit: "CO₂e",
+				unit: "kgCO₂e",
 				icon: <Leaf className="h-5 w-5" />,
 				activeColor:
 					"data-[active=true]:border-amber-500 data-[active=true]:bg-amber-50 dark:data-[active=true]:bg-amber-950",
@@ -85,14 +101,12 @@ export function SummaryInteractiveChart() {
 	);
 
 	const chartData = useMemo(() => {
-		// NOTE: Use a theme context in a real app to switch colors
-		const colors =
-			window.matchMedia &&
-			window.matchMedia("(prefers-color-scheme: dark)").matches
-				? DARK_MODE_COLORS
-				: LIGHT_MODE_COLORS;
+		const colors = window.matchMedia?.("(prefers-color-scheme: dark)").matches
+			? DARK_MODE_COLORS
+			: LIGHT_MODE_COLORS;
 		return cart.map((item, i) => {
-			const kwh = (item.wattage * item.hoursPerDay * item.qty) / 1000;
+			let kwh = (item.wattage * item.usageValue * item.qty) / 1000;
+			if (item.usageFrequency === "weekly") kwh /= 7;
 			const cost = kwh * settings.pricePerKwh;
 			const co2 = kwh * settings.emissionFactor;
 			return {
@@ -108,30 +122,28 @@ export function SummaryInteractiveChart() {
 	const totals = useMemo(() => {
 		const t = getTotals();
 		return { kwh: t.kwh.day, cost: t.cost.day, co2: t.co2.day };
-	}, [getTotals]);
+	}, [getTotals, cart, settings]);
 
 	const chartConfig = {
 		[activeMetric]: { label: metricConfig[activeMetric].label },
 	};
 
 	return (
-		<Card className="mt-4 px-6 w-full rounded-xl border bg-card text-card-foreground shadow-sm">
-			<div className="flex flex-col lg:flex-row items-center justify-between">
-				<div className="flex h-full items-center justify-center gap-4">
-					<CardTitle className="text-2xl mb-3 font-semibold">
+		<Card className="w-full rounded-xl border bg-card text-card-foreground shadow-sm mt-6">
+			<div className="flex flex-col gap-4 p-6">
+				<div className="flex flex-col lg:flex-row items-start justify-between gap-4">
+					<CardTitle className="text-2xl font-semibold shrink-0">
 						Energy Summary
 					</CardTitle>
-				</div>
-				<div className="grid w-full grid-cols-1 gap-3 sm:max-w-md lg:max-w-xl sm:grid-cols-3">
-					{(Object.keys(metricConfig) as Array<keyof typeof metricConfig>).map(
-						(metric) => (
+					<div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
+						{(
+							Object.keys(metricConfig) as Array<keyof typeof metricConfig>
+						).map((metric) => (
 							<button
 								key={metric}
 								data-active={activeMetric === metric}
 								onClick={() => setActiveMetric(metric)}
-								className={`rounded-lg cursor-pointer border-2 p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring 
-                                        border-transparent hover:bg-muted/50
-                                        ${metricConfig[metric].activeColor}`}>
+								className={`rounded-lg cursor-pointer border-2 p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring border-transparent hover:bg-muted/50 ${metricConfig[metric].activeColor}`}>
 								<div className="flex items-center gap-2 text-muted-foreground">
 									{metricConfig[metric].icon}
 									<span className="text-sm font-medium">
@@ -147,24 +159,27 @@ export function SummaryInteractiveChart() {
 									</span>
 								</div>
 							</button>
-						)
-					)}
+						))}
+					</div>
 				</div>
+				{activeMetric === "co2" && <RelatabilityTip kgCO2e={totals.co2} />}
 			</div>
 
-			<CardContent className="m-6">
+			<CardContent className="px-2 sm:px-6 pb-6">
 				{chartData.length > 0 ? (
 					<ChartContainer
 						config={chartConfig}
-						className="min-h-64 max-h-80  w-full">
-						<ResponsiveContainer className={""} width="100%">
-							<BarChart data={chartData} layout="vertical" className="">
+						className="min-h-64 max-h-80 w-full pr-6">
+						<ResponsiveContainer width="100%">
+							<BarChart
+								data={chartData}
+								layout="vertical"
+								margin={{ top: 5, right: 20, left: 10, bottom: 20 }}>
 								<CartesianGrid
 									horizontal={false}
 									stroke="hsl(var(--border) / 0.5)"
 								/>
 								<XAxis
-									className=""
 									type="number"
 									stroke="hsl(var(--muted-foreground))"
 									tickLine={false}
@@ -173,7 +188,7 @@ export function SummaryInteractiveChart() {
 									label={{
 										value: `${metricConfig[activeMetric].label} (${metricConfig[activeMetric].unit}/day)`,
 										position: "insideBottom",
-										offset: -10,
+										offset: -5,
 										className: "fill-muted-foreground text-sm",
 									}}
 								/>
@@ -196,7 +211,6 @@ export function SummaryInteractiveChart() {
 									}
 								/>
 								<Bar
-									className=""
 									dataKey={activeMetric}
 									radius={[0, 4, 4, 0]}
 									maxBarSize={80}>
@@ -215,16 +229,14 @@ export function SummaryInteractiveChart() {
 						</ResponsiveContainer>
 					</ChartContainer>
 				) : (
-					<div className="flex flex-col  items-center justify-center text-muted-foreground">
-						<div className="w-full flex items-center justify-center">
-							<LottieAnimator
-								src="/animationAssets/Solar Sun Power Animation.json"
-								className=""
-								loop
-								autoplay
-							/>
-						</div>
-						<p>No data available to display.</p>
+					<div className="flex flex-col items-center justify-center text-muted-foreground min-h-64">
+						<LottieAnimator
+							src="/animationAssets/Solar Sun Power Animation.json"
+							className="w-48 h-48"
+							loop
+							autoplay
+						/>
+						<p>Add an appliance to see your energy summary.</p>
 					</div>
 				)}
 			</CardContent>

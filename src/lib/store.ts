@@ -1,9 +1,11 @@
+// src/lib/store.ts
+
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { v4 as uuidv4 } from "uuid";
 import { APPLIANCE_DATA } from "@/lib/appliances";
 
-// --- TYPES ---
+// --- UPDATED TYPES ---
 type ApplianceKey = keyof typeof APPLIANCE_DATA | "custom";
 
 export interface CartItem {
@@ -11,43 +13,33 @@ export interface CartItem {
 	key: ApplianceKey;
 	name: string;
 	wattage: number;
-	hoursPerDay: number;
+	usageValue: number; // Replaces hoursPerDay
+	usageFrequency: "daily" | "weekly"; // NEW: for flexible time input
 	qty: number;
 }
 
 export interface Settings {
 	pricePerKwh: number;
 	currency: string;
-	emissionFactor: number;
+	emissionFactor: number; // in kg CO₂e per kWh
 	regionPreset: string;
 }
 
-// The AppState is now simpler without the 'form' object
 interface AppState {
 	cart: CartItem[];
 	settings: Settings;
 	error: string | null;
 }
 
-// AppActions are updated to reflect the new logic
 interface AppActions {
-	// Cart Actions
-	addItemToCart: (key: ApplianceKey) => void; // Now accepts a key
+	addItemToCart: (key: ApplianceKey) => void;
 	updateCartItem: (id: string, patch: Partial<Omit<CartItem, "id">>) => void;
 	removeCartItem: (id: string) => void;
 	clearCart: () => void;
-
-	// Settings Actions
 	updateSettings: (patch: Partial<Settings>) => void;
-
-	// Form Actions are removed: setFormField, resetForm
-
-	// General Actions
 	setError: (message: string | null) => void;
 	reset: () => void;
 	exportCsv: () => void;
-
-	// Getters
 	getTotals: () => {
 		kwh: { day: number; month: number; year: number };
 		cost: { day: number; month: number; year: number };
@@ -60,23 +52,22 @@ const DEFAULT_SETTINGS: Settings = {
 	pricePerKwh: 0.17,
 	currency: "$",
 	emissionFactor: 0.417,
-	regionPreset: "0.417",
+	regionPreset: "US Average (0.417)",
 };
 
-// The initial state no longer needs a 'form' property
 const INITIAL_STATE: AppState = {
 	cart: [
 		{
 			id: uuidv4(),
-			key: "television",
-			name: APPLIANCE_DATA.television.name,
-			wattage: APPLIANCE_DATA.television.wattage,
-			hoursPerDay: 4,
+			key: "refrigerator",
+			name: APPLIANCE_DATA.refrigerator.name,
+			wattage: APPLIANCE_DATA.refrigerator.wattage,
+			usageValue: 24, // Refrigerators run 24/7
+			usageFrequency: "daily",
 			qty: 1,
 		},
 	],
 	settings: DEFAULT_SETTINGS,
-
 	error: null,
 };
 
@@ -89,7 +80,6 @@ export const useAppStore = create<AppState & AppActions>()(
 			// --- ACTIONS ---
 			setError: (message) => set({ error: message }),
 
-			// addItemToCart is now much simpler
 			addItemToCart: (key) => {
 				get().setError(null);
 				if (!key) {
@@ -98,25 +88,30 @@ export const useAppStore = create<AppState & AppActions>()(
 				}
 
 				let newItem: CartItem;
+				const baseItem = {
+					id: uuidv4(),
+					usageValue: 1,
+					usageFrequency: "daily" as const,
+					qty: 1,
+				};
 
 				if (key === "custom") {
 					newItem = {
-						id: uuidv4(),
+						...baseItem,
 						key: "custom",
 						name: "Custom Appliance",
-						wattage: 100, // Default wattage, user can edit
-						hoursPerDay: 1, // Default hours
-						qty: 1, // Default quantity
+						wattage: 100,
 					};
 				} else {
 					const appliance = APPLIANCE_DATA[key];
 					newItem = {
-						id: uuidv4(),
+						...baseItem,
 						key,
 						name: appliance.name,
 						wattage: appliance.wattage,
-						hoursPerDay: 1, // Default hours
-						qty: 1, // Default quantity
+						// Set specific defaults for certain appliances
+						usageFrequency: appliance.defaultFrequency || "daily",
+						usageValue: appliance.defaultValue || 1,
 					};
 				}
 
@@ -148,10 +143,16 @@ export const useAppStore = create<AppState & AppActions>()(
 			// --- GETTERS ---
 			getTotals: () => {
 				const { cart, settings } = get();
-				const totalKwhPerDay = cart.reduce(
-					(acc, it) => acc + (it.wattage * it.hoursPerDay * it.qty) / 1000,
-					0
-				);
+				const totalKwhPerDay = cart.reduce((acc, it) => {
+					// Calculate kWh for the item's period (day or week)
+					let kwh = (it.wattage * it.usageValue * it.qty) / 1000;
+					// If usage is weekly, average it out to a daily value
+					if (it.usageFrequency === "weekly") {
+						kwh /= 7;
+					}
+					return acc + kwh;
+				}, 0);
+
 				const totalCostPerDay = totalKwhPerDay * settings.pricePerKwh;
 				const totalCo2PerDay = totalKwhPerDay * settings.emissionFactor;
 
@@ -180,18 +181,21 @@ export const useAppStore = create<AppState & AppActions>()(
 				const header = [
 					"name",
 					"wattage_w",
-					"hours_per_day",
+					"usage_value",
+					"usage_frequency",
 					"quantity",
-					"kwh_per_day",
-					"cost_per_day",
+					"avg_kwh_per_day",
+					"avg_cost_per_day",
 				];
 				const rows = cart.map((it) => {
-					const kwh = (it.wattage * it.hoursPerDay * it.qty) / 1000;
+					let kwh = (it.wattage * it.usageValue * it.qty) / 1000;
+					if (it.usageFrequency === "weekly") kwh /= 7;
 					const cost = kwh * settings.pricePerKwh;
 					return [
 						it.name,
 						it.wattage,
-						it.hoursPerDay,
+						it.usageValue,
+						it.usageFrequency,
 						it.qty,
 						kwh.toFixed(3),
 						cost.toFixed(3),
@@ -220,9 +224,8 @@ export const useAppStore = create<AppState & AppActions>()(
 			},
 		}),
 		{
-			name: "green-awareness-storage", // local storage key
+			name: "green-awareness-storage",
 			storage: createJSONStorage(() => localStorage),
-			// Only persist the cart and settings, not the form or API state
 			partialize: (state) => ({ cart: state.cart, settings: state.settings }),
 		}
 	)
