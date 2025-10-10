@@ -32,13 +32,13 @@ import LottieAnimator from "@/components/ui/lottieAnimator";
 type ApplianceKey = keyof typeof APPLIANCE_DATA;
 
 const ListHeader = () => (
-	<div className="hidden md:grid md:grid-cols-12 gap-4 items-center px-4 py-2 text-sm font-semibold text-muted-foreground">
-		<div className="md:col-span-1"></div> {/* Icon Spacer */}
-		<div className="md:col-span-4">Appliance</div>
-		<div className="md:col-span-2 text-center">Wattage</div>
-		<div className="md:col-span-2 text-center">Usage</div>
-		<div className="md:col-span-2 text-center">Quantity</div>
-		<div className="md:col-span-1"></div> {/* Action Spacer */}
+	<div className="hidden md:grid grid-cols-12 gap-x-2 md:gap-x-4 items-center px-4 py-2 text-sm font-semibold text-muted-foreground">
+		<div className="col-span-1 text-left"></div> {/* Icon Spacer */}
+		<div className="col-span-5 text-left">Appliance / Preset</div>
+		<div className="col-span-2 text-center">Wattage</div>
+		<div className="col-span-2 text-center">Usage</div>
+		<div className="col-span-1 text-center">Qty</div>
+		<div className="col-span-1 text-right"></div> {/* Action Spacer */}
 	</div>
 );
 
@@ -56,7 +56,7 @@ const InputWithLabel = ({ label, icon, ...props }: InputWithLabelProps) => (
 			{label}
 		</span>
 		{icon && (
-			<span className="absolute left-3 text-muted-foreground top-1/2 -translate-y-1/2 pointer-events-none hidden md:inline">
+			<span className="absolute left-3 text-yellow-500 top-1/2 -translate-y-1/2 pointer-events-none hidden md:inline">
 				{icon}
 			</span>
 		)}
@@ -78,7 +78,7 @@ function UsageInput({ item }: { item: CartItem }) {
 				onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
 					updateCartItem(item.id, { usageValue: Number(e.target.value) })
 				}
-				className="rounded-r-none"
+				className="rounded-r-none bg-white dark:bg-transparent"
 			/>
 			<Select
 				value={item.usageFrequency}
@@ -138,10 +138,10 @@ function ApplianceItem({ item }: { item: CartItem }) {
 						})
 					}
 					placeholder="Appliance Name"
-					className="bg-white dark:bg-transparent shadow-md"
+					className="bg-white dark:bg-transparent shadow-md max-w-sm"
 				/>
 				<Select onValueChange={handlePresetChange}>
-					<SelectTrigger className="w-auto bg-white dark:bg-transparent shadow-md h-10 px-3">
+					<SelectTrigger className="w-full max-w-[150px] bg-white dark:bg-transparent shadow-md h-10 px-3">
 						<SelectValue className="" placeholder="Presets Item" />
 					</SelectTrigger>
 					<SelectContent className="">
