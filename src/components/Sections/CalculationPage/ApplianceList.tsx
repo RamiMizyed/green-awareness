@@ -1,5 +1,3 @@
-// src/components/Sections/CalculationPage/ApplianceList.tsx
-
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -9,7 +7,7 @@ import { useAppStore, CartItem } from "@/lib/store";
 import { APPLIANCE_DATA } from "@/lib/appliances";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"; // No InputProps needed here
+import { Input } from "@/components/ui/input";
 import {
 	Select,
 	SelectContent,
@@ -44,7 +42,6 @@ const ListHeader = () => (
 	</div>
 );
 
-// --- UPDATED: Replaced InputProps with React.ComponentProps<typeof Input> ---
 type InputWithLabelProps = React.ComponentProps<typeof Input> & {
 	label: string;
 	icon?: React.ReactNode;
@@ -78,7 +75,6 @@ function UsageInput({ item }: { item: CartItem }) {
 				min={0}
 				step={0.1}
 				value={item.usageValue}
-				// --- UPDATED: Added event type ---
 				onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
 					updateCartItem(item.id, { usageValue: Number(e.target.value) })
 				}
@@ -103,14 +99,15 @@ function UsageInput({ item }: { item: CartItem }) {
 
 function ApplianceItem({ item }: { item: CartItem }) {
 	const { updateCartItem, removeCartItem } = useAppStore();
-	const handleApplianceChange = (newKey: ApplianceKey) => {
-		const newApplianceData =
-			APPLIANCE_DATA[newKey as keyof typeof APPLIANCE_DATA];
-		if (newApplianceData) {
+
+	const handlePresetChange = (presetKey: ApplianceKey) => {
+		if (!presetKey) return;
+		const presetData = APPLIANCE_DATA[presetKey];
+		if (presetData) {
 			updateCartItem(item.id, {
-				key: newKey,
-				name: newApplianceData.name,
-				wattage: newApplianceData.wattage,
+				key: presetKey,
+				name: presetData.name,
+				wattage: presetData.wattage,
 			});
 		}
 	};
@@ -130,29 +127,31 @@ function ApplianceItem({ item }: { item: CartItem }) {
 				</div>
 			</div>
 
-			<div className="col-span-11 lg:col-span-4">
-				{item.key === "custom" ? (
-					<Input
-						value={item.name}
-						onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-							updateCartItem(item.id, { name: e.target.value })
-						}
-						placeholder="Custom Appliance"
-					/>
-				) : (
-					<Select value={item.key} onValueChange={handleApplianceChange}>
-						<SelectTrigger className="bg-white shadow-md dark:bg-transparent">
-							<SelectValue />
-						</SelectTrigger>
-						<SelectContent>
-							{Object.entries(APPLIANCE_DATA).map(([key, appliance]) => (
-								<SelectItem key={key} value={key}>
-									{appliance.name}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-				)}
+			{/* --- MODIFIED: Appliance Name and Preset Selector --- */}
+			<div className="col-span-11 lg:col-span-5 flex items-center gap-1">
+				<Input
+					value={item.name}
+					onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+						updateCartItem(item.id, {
+							name: e.target.value,
+							key: "custom", // Typing a name makes it a custom item
+						})
+					}
+					placeholder="Appliance Name"
+					className="bg-white dark:bg-transparent shadow-md"
+				/>
+				<Select onValueChange={handlePresetChange}>
+					<SelectTrigger className="w-auto bg-white dark:bg-transparent shadow-md h-10 px-3">
+						<SelectValue className="" placeholder="Presets Item" />
+					</SelectTrigger>
+					<SelectContent className="">
+						{Object.entries(APPLIANCE_DATA).map(([key, appliance]) => (
+							<SelectItem key={key} value={key}>
+								{appliance.name}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
 			</div>
 
 			<div className="col-span-4 md:col-span-2 mt-2 md:mt-0">
@@ -167,7 +166,7 @@ function ApplianceItem({ item }: { item: CartItem }) {
 					}
 				/>
 			</div>
-			<div className="col-span-8 md:col-span-3 mt-2 md:mt-0">
+			<div className="col-span-8 md:col-span-2 mt-2 md:mt-0">
 				<UsageInput item={item} />
 			</div>
 			<div className="col-span-4 md:col-span-1 mt-2 md:mt-0">
@@ -198,42 +197,19 @@ function ApplianceItem({ item }: { item: CartItem }) {
 	);
 }
 
-function AddApplianceForm({ cart }: { cart: CartItem[] }) {
-	const { addItemToCart, clearCart, error } = useAppStore();
-	const [selectedKey, setSelectedKey] = useState<string>("");
-
-	const handleAdd = () => {
-		if (selectedKey) {
-			addItemToCart(selectedKey as ApplianceKey);
-			setSelectedKey("");
-		}
-	};
+// --- NEW: Component for action buttons ---
+function ActionButtons() {
+	const { cart, addItemToCart, clearCart, error } = useAppStore();
 
 	return (
 		<div className="my-4 pt-4 border-t">
 			<div className="flex flex-col sm:flex-row gap-2">
-				<Select value={selectedKey} onValueChange={setSelectedKey}>
-					<SelectTrigger>
-						<SelectValue placeholder="Choose an appliance to add..." />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectItem value="custom">Custom / Other</SelectItem>
-						{Object.entries(APPLIANCE_DATA).map(([k, v]) => (
-							<SelectItem
-								key={k}
-								value={k}>{`${v.name} — ${v.wattage}W`}</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
 				<motion.div
 					className="w-full sm:w-auto"
 					whileHover={{ scale: 1.05 }}
 					whileTap={{ scale: 0.95 }}>
-					<Button
-						onClick={handleAdd}
-						className="w-full"
-						disabled={!selectedKey}>
-						<Plus className="w-4 h-4 mr-2" /> Add to list
+					<Button onClick={() => addItemToCart("custom")} className="w-full">
+						<Plus className="w-4 h-4 mr-2" /> Add Appliance
 					</Button>
 				</motion.div>
 
@@ -283,29 +259,33 @@ function AddApplianceForm({ cart }: { cart: CartItem[] }) {
 	);
 }
 
-const EmptyState = () => (
-	<motion.div
-		initial={{ opacity: 0, scale: 0.95 }}
-		animate={{ opacity: 1, scale: 1 }}
-		className="text-center flex flex-col items-center justify-center text-sm py-10">
-		<LottieAnimator
-			src="/animationAssets/empty ghost.json"
-			className="w-40 h-40"
-			loop
-			autoplay
-		/>
-		<p className="mt-4 text-muted-foreground">Your appliance list is empty.</p>
-		<p>Add one below to get started.</p>
-		<div className="h-20 -mt-6">
+const EmptyState = () => {
+	const { addItemToCart } = useAppStore();
+	return (
+		<motion.div
+			initial={{ opacity: 0, scale: 0.95 }}
+			animate={{ opacity: 1, scale: 1 }}
+			className="text-center flex flex-col items-center justify-center text-sm py-10">
 			<LottieAnimator
-				src="/animationAssets/Arrow down.json"
-				className="w-10"
+				src="/animationAssets/empty ghost.json"
+				className="w-40 h-40"
+				loop
 				autoplay
-				loop={false}
 			/>
-		</div>
-	</motion.div>
-);
+			<p className="my-4 text-muted-foreground">
+				Your appliance list is empty.
+			</p>
+			<motion.div
+				className="w-full sm:w-auto"
+				whileHover={{ scale: 1.05 }}
+				whileTap={{ scale: 0.95 }}>
+				<Button onClick={() => addItemToCart("custom")} className="w-full">
+					<Plus className="w-4 h-4 mr-2" /> Add Appliance
+				</Button>
+			</motion.div>
+		</motion.div>
+	);
+};
 
 export function ApplianceList() {
 	const { cart, getTotals, settings } = useAppStore();
@@ -319,13 +299,14 @@ export function ApplianceList() {
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
+				<ActionButtons />
 				<AnimatePresence mode="wait">
 					{cart.length === 0 ? (
 						<EmptyState key="empty" />
 					) : (
 						<motion.div key="list">
 							<ListHeader />
-							<div className="overflow-y-auto min-h-[320px] max-h-[420px] pr-1 -mr-3">
+							<div className="overflow-y-auto min-h-[120px] max-h-[420px] pr-1 -mr-3">
 								<AnimatePresence>
 									{cart.map((it) => (
 										<ApplianceItem key={it.id} item={it} />
@@ -335,8 +316,8 @@ export function ApplianceList() {
 						</motion.div>
 					)}
 				</AnimatePresence>
-				<AddApplianceForm cart={cart} />
-				<div className="flex items-center justify-between mt-4 border-t pt-4">
+
+				<div className="flex items-center justify-between mt-4  pt-4">
 					<div className="text-sm flex items-center text-muted-foreground">
 						{cart.length} item(s) — Daily total:
 						<strong className="mx-2 dark:text-yellow-500 text-orange-600">
