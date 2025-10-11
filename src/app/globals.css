@@ -113,6 +113,21 @@
 }
 
 @layer base {
+	/* Hide scrollbars globally */
+	* {
+		scrollbar-width: none !important; /* Firefox */
+		-ms-overflow-style: none !important; /* IE and Edge */
+	}
+
+	*::-webkit-scrollbar {
+		display: none !important; /* Chrome, Safari */
+	}
+
+	html,
+	body {
+		overflow: -moz-scrollbars-none;
+		overflow: hidden !important;
+	}
 	* {
 		@apply border-border outline-ring/50;
 	}

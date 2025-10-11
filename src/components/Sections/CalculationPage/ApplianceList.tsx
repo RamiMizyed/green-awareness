@@ -326,7 +326,7 @@ export function ApplianceList() {
 		<Card className="w-full">
 			<CardHeader>
 				<CardTitle className="text-2xl font-semibold">
-					Your Appliances & Settings
+					Your Appliances
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
@@ -346,26 +346,9 @@ export function ApplianceList() {
 						</motion.div>
 					)}
 				</AnimatePresence>
-				<div className="flex items-center justify-end mt-4">
-					<ActionButtons />
-				</div>
 
-				<div className="flex items-center justify-between mt-4 border-t pt-4">
-					<div className="text-sm flex items-center text-muted-foreground">
-						{cart.length} item(s) — Daily total:
-						<strong className="mx-2 dark:text-yellow-500 text-orange-600">
-							{totals.kwh.day.toFixed(3)} kWh/day
-						</strong>
-						<LottieAnimator
-							src="/animationAssets/renewable-energy.json"
-							className="w-10 h-10"
-							loop
-							autoplay
-						/>
-					</div>
-				</div>
-				<div className="mt-4 border-t pt-4">
-					<CalculationSettings />
+				<div className="flex items-center justify-end ">
+					<ActionButtons />
 				</div>
 			</CardContent>
 		</Card>

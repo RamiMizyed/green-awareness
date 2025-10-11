@@ -23,6 +23,7 @@ import {
 	Cell,
 } from "recharts";
 import LottieAnimator from "@/components/ui/lottieAnimator";
+import { CalculationSettings } from "./CalculationSettings";
 
 const LIGHT_MODE_COLORS = [
 	"#1d4ed8",
@@ -130,11 +131,28 @@ export function SummaryInteractiveChart() {
 
 	return (
 		<Card className="w-full rounded-xl border bg-card text-card-foreground shadow-sm mt-6">
+			<CardTitle className="text-2xl font-semibold shrink-0 px-6">
+				Energy Summary
+			</CardTitle>
+			<div className="flex items-center justify-start  px-6">
+				<div className="text-sm flex items-center text-muted-foreground">
+					{cart.length} item(s) — Daily total:
+					<strong className="mx-2 dark:text-yellow-500 text-orange-600">
+						{totals.kwh.toFixed(3)} kWh/Day
+					</strong>
+					<LottieAnimator
+						src="/animationAssets/renewable-energy.json"
+						className="w-10 h-10"
+						loop
+						autoplay
+					/>
+				</div>
+			</div>
 			<div className="flex flex-col gap-4 p-6">
+				<div className=" border-b pb-3">
+					<CalculationSettings />
+				</div>
 				<div className="flex flex-col lg:flex-row items-start justify-between gap-4">
-					<CardTitle className="text-2xl font-semibold shrink-0">
-						Energy Summary
-					</CardTitle>
 					<div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
 						{(
 							Object.keys(metricConfig) as Array<keyof typeof metricConfig>
