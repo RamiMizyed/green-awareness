@@ -25,7 +25,7 @@ export function CalculationSettings() {
 	return (
 		<div className="grid grid-cols-1">
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-				<div>
+				<div className="flex flex-col items-start justify-between">
 					<Label>Region Preset</Label>
 					<Select
 						value={String(settings.regionPreset)}

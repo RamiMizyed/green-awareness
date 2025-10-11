@@ -1,7 +1,14 @@
 "use client";
-import GreenAwarenessPage from "@/app/GACalculationPage";
+import dynamic from "next/dynamic";
 import LandingPage from "@/components/Sections/Landing/landing";
 import Loading from "@/components/ui/loader";
+
+// Lazy load GreenAwarenessPage
+const GreenAwarenessPage = dynamic(() => import("@/app/GACalculationPage"), {
+	loading: () => <p className="text-center text-gray-400 py-10">Loading...</p>,
+	ssr: false, // Prevents it from being rendered on the server
+});
+
 export default function Home() {
 	return (
 		<main
