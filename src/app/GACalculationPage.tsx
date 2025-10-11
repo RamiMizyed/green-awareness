@@ -25,18 +25,13 @@ export default function GACalculationPage() {
 		<div
 			id="Calc"
 			className="font-sans h-full min-h-screen py-[10vh] min-w-full flex items-center justify-center bg-background">
-			<main className="container mx-auto px-6">
+			<main className="max-w-[1148px] mx-auto px-6">
 				{/* Header */}
 				<div className="flex lg:mt-0 flex-col lg:flex-row items-center justify-between gap-6 mb-10">
 					<div>
 						<h1 className="text-4xl lg:text-5xl font-extrabold">
-							Green Awareness Calculator
+							Carbon Output Calculator
 						</h1>
-						<p className="text-base  max-w-3xl mx-auto mt-3  ">
-							Green Awareness is an open source project built by the community{" "}
-							<br /> for the community. Check out the code, contribute, or give
-							it a star on GitHub!
-						</p>
 					</div>
 					<div className="flex items-center gap-3">
 						<Button variant="outline" onClick={exportCsv}>

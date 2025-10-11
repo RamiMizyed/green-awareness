@@ -36,7 +36,6 @@ const Loading = () => {
 			ref={loadingRef}
 			className="fixed inset-0 z-[99999] flex flex-col gap-10 items-center justify-center bg-black text-white text-3xl font-bold">
 			<div className="w-12 h-12 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-			<h3>Loading ...</h3>
 		</div>
 	);
 };

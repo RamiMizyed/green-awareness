@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Leaf, Trash2, Plus, Power, Clock, Hash } from "lucide-react";
+import { Leaf, Trash2, Plus, Power } from "lucide-react";
 import { useAppStore, CartItem } from "@/lib/store";
 import { APPLIANCE_DATA } from "@/lib/appliances";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,52 +32,81 @@ import LottieAnimator from "@/components/ui/lottieAnimator";
 type ApplianceKey = keyof typeof APPLIANCE_DATA;
 
 const ListHeader = () => (
-	<div className="hidden md:grid grid-cols-12 gap-x-2 md:gap-x-4 items-center px-4 py-2 text-sm font-semibold text-muted-foreground">
-		<div className="col-span-1 text-left"></div> {/* Icon Spacer */}
-		<div className="col-span-5 text-left">Appliance / Preset</div>
-		<div className="col-span-2 text-center">Wattage</div>
-		<div className="col-span-2 text-center">Usage</div>
-		<div className="col-span-1 text-center">Qty</div>
-		<div className="col-span-1 text-right"></div> {/* Action Spacer */}
+	<div className="hidden md:flex gap-4 items-center px-4 py-2 text-sm font-semibold text-muted-foreground">
+		<div className="flex-1">Appliance / Preset</div>
+		<div className="flex gap-4">
+			<div className="w-24 text-center">Wattage</div>
+			<div className="w-32 text-center">Usage</div>
+			<div className="w-20 text-center">Qty</div>
+		</div>
+		<div className="w-10"></div> {/* Action Spacer */}
 	</div>
 );
 
 type InputWithLabelProps = React.ComponentProps<typeof Input> & {
 	label: string;
-	icon?: React.ReactNode;
 };
-const InputWithLabel = ({ label, icon, ...props }: InputWithLabelProps) => (
-	<div className="relative">
-		<Input
-			className="bg-white dark:bg-transparent shadow-md border text-center pr-10"
-			{...props}
-		/>
-		<span className="absolute right-3 text-xs text-muted-foreground top-1/2 -translate-y-1/2 pointer-events-none">
-			{label}
-		</span>
-		{icon && (
-			<span className="absolute left-3 text-yellow-500 top-1/2 -translate-y-1/2 pointer-events-none hidden md:inline">
-				{icon}
-			</span>
-		)}
-	</div>
-);
 
+const InputWithLabel = React.forwardRef<HTMLInputElement, InputWithLabelProps>(
+	({ label, ...props }, ref) => (
+		<div className="relative">
+			<Input
+				className="bg-white dark:bg-transparent shadow-md border text-center pr-10"
+				ref={ref}
+				{...props}
+			/>
+			<span className="absolute right-3 text-xs text-muted-foreground top-1/2 -translate-y-1/2 pointer-events-none">
+				{label}
+			</span>
+		</div>
+	)
+);
+InputWithLabel.displayName = "InputWithLabel";
+
+// --- ✅ FIXED: UsageInput component with local state ---
 function UsageInput({ item }: { item: CartItem }) {
 	const { updateCartItem } = useAppStore();
-	const isWeekly = item.usageFrequency === "weekly";
+	// Local state to hold the string value of the input for a better UX
+	const [localValue, setLocalValue] = useState(String(item.usageValue));
+
+	// Effect to sync local state if the prop from the global store changes
+	useEffect(() => {
+		// This check prevents overwriting user input unless the store value truly differs
+		if (Number(localValue) !== item.usageValue) {
+			setLocalValue(String(item.usageValue));
+		}
+	}, [item.usageValue]);
+
+	const handleChange = (value: string) => {
+		// Regex to allow numbers and a single decimal point
+		const decimalRegex = /^\d*\.?\d*$/;
+		if (decimalRegex.test(value)) {
+			setLocalValue(value);
+		}
+	};
+
+	const handleBlur = () => {
+		const numericValue = parseFloat(localValue);
+		// Final value is a valid number, defaulting to 0 if input is invalid
+		const finalValue = isNaN(numericValue) ? 0 : numericValue;
+
+		// Update the global store with the final number
+		if (finalValue !== item.usageValue) {
+			updateCartItem(item.id, { usageValue: finalValue });
+		}
+		// Sync local state to the cleaned-up value (e.g., "5." becomes "5")
+		setLocalValue(String(finalValue));
+	};
 
 	return (
-		<div className="flex items-center gap-0">
+		<div className="flex items-center">
 			<InputWithLabel
-				label={isWeekly ? "uses" : "hrs"}
-				type="number"
-				min={0}
-				step={0.1}
-				value={item.usageValue}
-				onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-					updateCartItem(item.id, { usageValue: Number(e.target.value) })
-				}
+				label={item.usageFrequency === "weekly" ? "uses" : "hrs"}
+				type="text"
+				inputMode="decimal"
+				value={localValue}
+				onChange={(e) => handleChange(e.target.value)}
+				onBlur={handleBlur}
 				className="rounded-r-none bg-white dark:bg-transparent"
 			/>
 			<Select
@@ -112,39 +141,49 @@ function ApplianceItem({ item }: { item: CartItem }) {
 		}
 	};
 
+	const handleNumericChange = (field: "wattage" | "qty", value: string) => {
+		const integerRegex = /^\d*$/;
+		if (integerRegex.test(value)) {
+			updateCartItem(item.id, { [field]: value === "" ? 0 : Number(value) });
+		}
+	};
+
 	return (
 		<motion.div
 			layout
 			initial={{ opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
 			exit={{ opacity: 0, x: -20, transition: { duration: 0.25 } }}
-			className="grid grid-cols-12 gap-x-2 md:gap-x-4 items-center p-2 rounded-lg border bg-secondary/50 mb-3">
-			<div className="col-span-1 hidden lg:flex items-center justify-start">
-				<div className="w-9 h-9 flex items-center justify-center bg-white/80 rounded-full text-muted-foreground">
+			className="flex flex-col md:flex-row items-stretch md:items-center gap-3 p-2 rounded-lg border bg-secondary/50 mb-3">
+			<div className="flex-1 flex items-center gap-2">
+				<div className="w-9 h-9 flex-shrink-0 flex items-center justify-center bg-white/10 rounded-full text-muted-foreground">
 					{APPLIANCE_DATA[item.key as ApplianceKey]?.icon || (
 						<Leaf className="w-5 h-5 text-yellow-500" />
 					)}
 				</div>
-			</div>
-
-			{/* --- MODIFIED: Appliance Name and Preset Selector --- */}
-			<div className="col-span-11 lg:col-span-5 flex items-center gap-1">
 				<Input
 					value={item.name}
-					onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+					onChange={(e) =>
 						updateCartItem(item.id, {
 							name: e.target.value,
-							key: "custom", // Typing a name makes it a custom item
+							key: "custom",
 						})
 					}
 					placeholder="Appliance Name"
-					className="bg-white dark:bg-transparent shadow-md max-w-sm"
+					className="bg-white dark:bg-transparent shadow-md flex-grow"
 				/>
-				<Select onValueChange={handlePresetChange}>
-					<SelectTrigger className="w-full max-w-[150px] bg-white dark:bg-transparent shadow-md h-10 px-3">
-						<SelectValue className="" placeholder="Presets Item" />
+				<Select onValueChange={handlePresetChange} value={item.key}>
+					<SelectTrigger
+						// --- FIXED: Removed text-white and placeholder:text-white ---
+						className="w-[150px] flex-shrink-0 bg-white dark:bg-transparent shadow-md h-10 px-3">
+						<SelectValue placeholder="Preset" />
 					</SelectTrigger>
-					<SelectContent className="">
+					<SelectContent>
+						{/* We should add an item for the "custom" key so it displays correctly */}
+						<SelectItem value="custom" disabled>
+							Custom Appliance
+						</SelectItem>
+
 						{Object.entries(APPLIANCE_DATA).map(([key, appliance]) => (
 							<SelectItem key={key} value={key}>
 								{appliance.name}
@@ -154,55 +193,50 @@ function ApplianceItem({ item }: { item: CartItem }) {
 				</Select>
 			</div>
 
-			<div className="col-span-4 md:col-span-2 mt-2 md:mt-0">
-				<InputWithLabel
-					label="W"
-					icon={<Power size={14} />}
-					type="number"
-					min={0}
-					value={item.wattage}
-					onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-						updateCartItem(item.id, { wattage: Number(e.target.value) })
-					}
-				/>
-			</div>
-			<div className="col-span-8 md:col-span-2 mt-2 md:mt-0">
-				<UsageInput item={item} />
-			</div>
-			<div className="col-span-4 md:col-span-1 mt-2 md:mt-0">
-				<InputWithLabel
-					label="qty"
-					type="number"
-					min={1}
-					step={1}
-					value={item.qty}
-					onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-						updateCartItem(item.id, { qty: Math.floor(Number(e.target.value)) })
-					}
-				/>
+			<div className="flex items-center justify-between gap-3">
+				<div className="w-24">
+					<InputWithLabel
+						label="W"
+						type="text"
+						inputMode="numeric"
+						value={item.wattage}
+						onChange={(e) => handleNumericChange("wattage", e.target.value)}
+					/>
+				</div>
+				<div className="w-32">
+					<UsageInput item={item} />
+				</div>
+				<div className="w-20">
+					<InputWithLabel
+						label="qty"
+						type="text"
+						inputMode="numeric"
+						value={item.qty}
+						onChange={(e) => handleNumericChange("qty", e.target.value)}
+					/>
+				</div>
 			</div>
 
-			<div className="col-span-12 md:col-span-1 flex items-center justify-end">
-				<motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-					<Button
-						variant="ghost"
-						size="icon"
-						className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
-						onClick={() => removeCartItem(item.id)}>
-						<Trash2 className="w-4 h-4" />
-					</Button>
-				</motion.div>
-			</div>
+			<motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+				<Button
+					variant="ghost"
+					size="icon"
+					className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full w-10 h-10"
+					onClick={() => removeCartItem(item.id)}>
+					<Trash2 className="w-4 h-4" />
+				</Button>
+			</motion.div>
 		</motion.div>
 	);
 }
 
-// --- NEW: Component for action buttons ---
-function ActionButtons() {
-	const { cart, addItemToCart, clearCart, error } = useAppStore();
+// --- No changes to the components below ---
 
+function ActionButtons() {
+	const { addItemToCart, error } = useAppStore();
+	const { cart, getTotals, clearCart, settings } = useAppStore();
 	return (
-		<div className="my-4 pt-4 border-t">
+		<div className="my-4 flex gap-6 items-center justify-center pt-4 border-t">
 			<div className="flex flex-col sm:flex-row gap-2">
 				<motion.div
 					className="w-full sm:w-auto"
@@ -212,38 +246,38 @@ function ActionButtons() {
 						<Plus className="w-4 h-4 mr-2" /> Add Appliance
 					</Button>
 				</motion.div>
-
-				<AlertDialog>
-					<AlertDialogTrigger asChild>
-						<motion.div
-							className="w-full sm:w-auto"
-							whileHover={{ scale: 1.05 }}
-							whileTap={{ scale: 0.95 }}>
-							<Button
-								variant="destructive"
-								className="w-full"
-								disabled={cart.length === 0}>
-								<Trash2 className="w-4 h-4 mr-2" /> Clear List
-							</Button>
-						</motion.div>
-					</AlertDialogTrigger>
-					<AlertDialogContent>
-						<AlertDialogHeader>
-							<AlertDialogTitle>Are you sure?</AlertDialogTitle>
-							<AlertDialogDescription>
-								This will permanently delete all {cart.length} items from your
-								list.
-							</AlertDialogDescription>
-						</AlertDialogHeader>
-						<AlertDialogFooter>
-							<AlertDialogCancel>Cancel</AlertDialogCancel>
-							<AlertDialogAction onClick={clearCart}>
-								Yes, clear list
-							</AlertDialogAction>
-						</AlertDialogFooter>
-					</AlertDialogContent>
-				</AlertDialog>
 			</div>
+			<AlertDialog>
+				<AlertDialogTrigger asChild>
+					<motion.div
+						className="w-full sm:w-auto"
+						whileHover={{ scale: 1.05 }}
+						whileTap={{ scale: 0.95 }}>
+						<Button
+							variant="destructive"
+							className="w-full"
+							disabled={cart.length === 0}>
+							<Trash2 className="w-4 h-4 mr-2" /> Clear List
+						</Button>
+					</motion.div>
+				</AlertDialogTrigger>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Are you sure?</AlertDialogTitle>
+						<AlertDialogDescription>
+							This will permanently delete all {cart.length} items from your
+							list.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction onClick={clearCart}>
+							Yes, clear list
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+
 			<AnimatePresence>
 				{error && (
 					<motion.p
@@ -260,35 +294,32 @@ function ActionButtons() {
 }
 
 const EmptyState = () => {
-	const { addItemToCart } = useAppStore();
 	return (
 		<motion.div
 			initial={{ opacity: 0, scale: 0.95 }}
 			animate={{ opacity: 1, scale: 1 }}
-			className="text-center flex flex-col items-center justify-center text-sm py-10">
+			className="text-center flex flex-col  items-center justify-center text-sm ">
 			<LottieAnimator
 				src="/animationAssets/empty ghost.json"
 				className="w-40 h-40"
 				loop
 				autoplay
 			/>
-			<p className="my-4 text-muted-foreground">
-				Your appliance list is empty.
-			</p>
-			<motion.div
-				className="w-full sm:w-auto"
-				whileHover={{ scale: 1.05 }}
-				whileTap={{ scale: 0.95 }}>
-				<Button onClick={() => addItemToCart("custom")} className="w-full">
-					<Plus className="w-4 h-4 mr-2" /> Add Appliance
-				</Button>
-			</motion.div>
+			<p className=" text-muted-foreground">Your appliance list is empty.</p>
+			<div className="w-20 h-20 absolute right-[40%] md:right-[30%] lg:right-[20%] ">
+				<LottieAnimator
+					src="/animationAssets/Arrow down.json"
+					className="w-10"
+					loop
+					autoplay
+				/>
+			</div>
 		</motion.div>
 	);
 };
 
 export function ApplianceList() {
-	const { cart, getTotals, settings } = useAppStore();
+	const { cart, getTotals, clearCart, settings } = useAppStore();
 	const totals = useMemo(() => getTotals(), [getTotals, cart, settings]);
 
 	return (
@@ -299,7 +330,6 @@ export function ApplianceList() {
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<ActionButtons />
 				<AnimatePresence mode="wait">
 					{cart.length === 0 ? (
 						<EmptyState key="empty" />
@@ -316,8 +346,11 @@ export function ApplianceList() {
 						</motion.div>
 					)}
 				</AnimatePresence>
+				<div className="flex items-center justify-end mt-4">
+					<ActionButtons />
+				</div>
 
-				<div className="flex items-center justify-between mt-4  pt-4">
+				<div className="flex items-center justify-between mt-4 border-t pt-4">
 					<div className="text-sm flex items-center text-muted-foreground">
 						{cart.length} item(s) — Daily total:
 						<strong className="mx-2 dark:text-yellow-500 text-orange-600">
