@@ -138,7 +138,12 @@ export default function LandingPage() {
 							<Button
 								variant="outline"
 								className=""
-								onClick={() => window.open("https://github.com", "_blank")} // Replace with your repo link
+								onClick={() =>
+									window.open(
+										"https://github.com/RamiMizyed/green-awareness",
+										"_blank"
+									)
+								} // Replace with your repo link
 							>
 								<Github className="w-5 h-5 mr-2" /> View on GitHub
 							</Button>

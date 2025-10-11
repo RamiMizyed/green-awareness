@@ -107,9 +107,9 @@ function UsageInput({ item }: { item: CartItem }) {
 				value={localValue}
 				onChange={(e) => handleChange(e.target.value)}
 				onBlur={handleBlur}
-				className="rounded-r-none bg-white dark:bg-transparent"
+				className=" bg-white dark:bg-transparent"
 			/>
-			<Select
+			{/* <Select
 				value={item.usageFrequency}
 				onValueChange={(value: "daily" | "weekly") =>
 					updateCartItem(item.id, { usageFrequency: value })
@@ -121,7 +121,7 @@ function UsageInput({ item }: { item: CartItem }) {
 					<SelectItem value="daily">/day</SelectItem>
 					<SelectItem value="weekly">/week</SelectItem>
 				</SelectContent>
-			</Select>
+			</Select> */}
 		</div>
 	);
 }
@@ -203,7 +203,7 @@ function ApplianceItem({ item }: { item: CartItem }) {
 						onChange={(e) => handleNumericChange("wattage", e.target.value)}
 					/>
 				</div>
-				<div className="w-32">
+				<div className="w-24">
 					<UsageInput item={item} />
 				</div>
 				<div className="w-20">
