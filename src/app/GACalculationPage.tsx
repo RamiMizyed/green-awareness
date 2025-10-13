@@ -53,11 +53,7 @@ export default function GACalculationPage() {
 						</Button>
 					</div>
 				</div>
-
-				<div className="grid grid-cols-1 w-full  gap-6">
-					<ApplianceList />
-				</div>
-
+				<ApplianceList />
 				<SummaryInteractiveChart />
 			</main>
 		</div>

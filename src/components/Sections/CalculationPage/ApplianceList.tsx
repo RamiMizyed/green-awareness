@@ -26,7 +26,6 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { CalculationSettings } from "./CalculationSettings";
 import LottieAnimator from "@/components/ui/lottieAnimator";
 
 type ApplianceKey = keyof typeof APPLIANCE_DATA;

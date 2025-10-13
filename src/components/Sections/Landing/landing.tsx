@@ -75,7 +75,7 @@ export default function LandingPage() {
 		// Apply the Poppins font class to the main wrapper
 		<div className={`${poppins.className} bg-zinc-950 text-zinc-200`}>
 			{/* HERO SECTION */}
-			<div className="relative h-[100svh] min-h-[600px] overflow-hidden py-[10vh] min-w-full">
+			<div className="relative h-[80svh] min-h-[600px] overflow-hidden py-[10vh] min-w-full">
 				{/* Video Background */}
 				<motion.video
 					initial={{
@@ -103,9 +103,9 @@ export default function LandingPage() {
 				/>
 				<div className="absolute inset-0 bg-gradient-to-br from-zinc-950/80 to-zinc-950/20 z-5" />{" "}
 				{/* Overlay for better text visibility */}
-				<main className="container flex h-full mx-auto px-6 py-[150px] min-h-[400px] text-center relative z-10">
+				<main className="flex items-center justify-center h-full mx-auto px-6 py-[150px] min-h-[400px] text-center relative z-10">
 					<motion.div
-						className="flex flex-col items-start justify-center gap-6 mb-16 max-w-3xl text-left"
+						className="flex flex-col items-center justify-center gap-6 mb-16 max-w-3xl text-left"
 						variants={containerVariants}
 						initial="hidden"
 						animate="visible">
