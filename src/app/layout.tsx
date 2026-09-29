@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { LangProvider } from "@/lib/lang";
-import SmoothScroll from "@/lib/SmoothScroll";
 import { ThemeProvider } from "next-themes";
 import NavBar from "@/components/ui/navBar";
 import { Analytics } from "@vercel/analytics/next";
@@ -17,13 +15,11 @@ const geistMono = Geist_Mono({
 	subsets: ["latin"],
 });
 
-// ✅ Updated for Green Awareness
 export const metadata: Metadata = {
 	metadataBase: new URL("https://green-awareness.org"), // <-- replace with your domain
-	title:
-		"Green Awareness - Go Green, Reduce Carbon Footprint, Renewable Energy",
+	title: "Green Awareness | Home Energy & Carbon Footprint Calculator",
 	description:
-		"Green Awareness is dedicated to promoting sustainability, reducing carbon footprints, and advancing renewable energy. Stay informed with the latest green energy news, tips, and blogs to help create a cleaner and greener future.",
+		"Find out what your home appliances cost you and how much CO₂ they're responsible for, with local prices and grid data for 29 regions. Get a personal plan to cut your bill and your footprint.",
 	applicationName: "Green Awareness",
 	keywords: [
 		"Green Awareness",
@@ -44,45 +40,33 @@ export const metadata: Metadata = {
 	publisher: "Green Awareness",
 	robots: { index: true, follow: true },
 	openGraph: {
-		title: "Green Awareness — Go Green, Renewable Energy & Sustainability",
+		title: "Green Awareness | Home Energy & Carbon Footprint Calculator",
 		description:
-			"Join Green Awareness in creating a sustainable future. Explore renewable energy, eco-friendly living, and the fight against climate change.",
+			"See where your electricity goes, what it costs, and the changes that save you the most money and CO₂.",
 		url: "https://green-awareness.org",
 		siteName: "Green Awareness",
-		images: [
-			{
-				url: "/assets/green-awareness-main.png", // <-- add your image in public/assets
-				width: 1200,
-				height: 630,
-				alt: "Green Awareness Sustainability Banner",
-			},
-		],
 		locale: "en_US",
 		type: "website",
 	},
 	twitter: {
-		card: "summary_large_image",
-		title: "Green Awareness — Go Green, Renewable Energy & Sustainability",
+		card: "summary",
+		title: "Green Awareness | Home Energy & Carbon Footprint Calculator",
 		description:
-			"Promoting sustainability, reducing carbon footprints, and advancing renewable energy for a cleaner and greener future.",
+			"See where your electricity goes, what it costs, and the changes that save you the most money and CO₂.",
 		creator: "@RamiMizyed", // or a Green Awareness handle if you make one
-		images: ["/assets/green-awareness-main.png"],
 	},
 	icons: {
 		icon: "/favicon.ico",
-		shortcut: "/favicon.ico",
-		apple: "/apple-touch-icon.png",
 	},
 };
 
-// ✅ Viewport stays as is
 export const viewport: Viewport = {
 	width: "device-width",
 	initialScale: 1,
 	colorScheme: "light dark",
 	themeColor: [
 		{ media: "(prefers-color-scheme: light)", color: "#ffffff" },
-		{ media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+		{ media: "(prefers-color-scheme: dark)", color: "#18181b" },
 	],
 };
 
@@ -97,12 +81,8 @@ export default function RootLayout({
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 					<Analytics />
-					<LangProvider>
-						<SmoothScroll>
-							<NavBar />
-							<main className="min-h-screen">{children}</main>
-						</SmoothScroll>
-					</LangProvider>
+					<NavBar />
+					<main className="min-h-screen">{children}</main>
 				</ThemeProvider>
 			</body>
 		</html>

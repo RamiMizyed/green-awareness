@@ -1,232 +1,222 @@
-// src/lib/store.ts
-
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { v4 as uuidv4 } from "uuid";
-import { APPLIANCE_DATA } from "@/lib/appliances";
-
-// --- UPDATED TYPES ---
-type ApplianceKey = keyof typeof APPLIANCE_DATA | "custom";
-
-export interface CartItem {
-	id: string;
-	key: ApplianceKey;
-	name: string;
-	wattage: number;
-	usageValue: number; // Replaces hoursPerDay
-	usageFrequency: "daily" | "weekly"; // NEW: for flexible time input
-	qty: number;
-}
-
-export interface Settings {
-	pricePerKwh: number;
-	currency: string;
-	emissionFactor: number; // in kg CO₂e per kWh
-	regionPreset: string;
-}
+import { getSpec, TEMPLATES } from "@/lib/data/appliances";
+import { getRegion, guessRegionId } from "@/lib/data/regions";
+import type { ApplianceItem, Period, Settings } from "@/lib/calc";
 
 interface AppState {
-	cart: CartItem[];
+	items: ApplianceItem[];
 	settings: Settings;
-	error: string | null;
+	/** False until the visitor picks a country (we guess one on first visit). */
+	regionConfirmed: boolean;
+	period: Period;
+	/** Ids of savings tips the user has committed to. */
+	plan: string[];
+	/** Last removed item, so a removal can be undone. */
+	lastRemoved: { item: ApplianceItem; index: number } | null;
 }
 
 interface AppActions {
-	addItemToCart: (key: ApplianceKey) => void;
-	updateCartItem: (id: string, patch: Partial<Omit<CartItem, "id">>) => void;
-	removeCartItem: (id: string) => void;
-	clearCart: () => void;
+	addPreset: (specId: string) => void;
+	addCustom: () => void;
+	updateItem: (id: string, patch: Partial<Omit<ApplianceItem, "id">>) => void;
+	removeItem: (id: string) => void;
+	undoRemove: () => void;
+	duplicateItem: (id: string) => void;
+	clearItems: () => void;
+	loadTemplate: (templateId: string) => void;
+	setRegion: (regionId: string) => void;
+	guessRegion: () => void;
 	updateSettings: (patch: Partial<Settings>) => void;
-	setError: (message: string | null) => void;
-	reset: () => void;
-	exportCsv: () => void;
-	getTotals: () => {
-		kwh: { day: number; month: number; year: number };
-		cost: { day: number; month: number; year: number };
-		co2: { day: number; month: number; year: number };
+	setPeriod: (period: Period) => void;
+	togglePlan: (tipId: string) => void;
+}
+
+const newId = () =>
+	typeof crypto !== "undefined" && "randomUUID" in crypto
+		? crypto.randomUUID()
+		: Math.random().toString(36).slice(2);
+
+function itemFromSpec(specId: string, qty?: number): ApplianceItem | null {
+	const s = getSpec(specId);
+	if (!s) return null;
+	return {
+		id: newId(),
+		specId: s.id,
+		name: s.name,
+		mode: s.mode,
+		watts: s.watts,
+		hoursPerDay: s.hoursPerDay,
+		daysPerWeek: s.daysPerWeek,
+		kwhPerCycle: s.kwhPerCycle,
+		cyclesPerWeek: s.cyclesPerWeek,
+		monthsPerYear: s.monthsPerYear,
+		standbyWatts: s.standbyWatts,
+		qty: qty ?? s.qty,
 	};
 }
 
-// --- DEFAULTS ---
-const DEFAULT_SETTINGS: Settings = {
-	pricePerKwh: 0.17,
-	currency: "$",
-	emissionFactor: 0.417,
-	regionPreset: "US Average (0.417)",
+const settingsForRegion = (regionId: string): Settings => {
+	const r = getRegion(regionId);
+	return { regionId: r.id, pricePerKwh: r.price, intensity: r.intensity };
 };
 
 const INITIAL_STATE: AppState = {
-	cart: [
-		{
-			id: uuidv4(),
-			key: "refrigerator",
-			name: APPLIANCE_DATA.refrigerator.name,
-			wattage: APPLIANCE_DATA.refrigerator.wattage,
-			usageValue: 24, // Refrigerators run 24/7
-			usageFrequency: "daily",
-			qty: 1,
-		},
-	],
-	settings: DEFAULT_SETTINGS,
-	error: null,
+	items: [],
+	settings: settingsForRegion("us"),
+	regionConfirmed: false,
+	period: "month",
+	plan: [],
+	lastRemoved: null,
 };
 
-// --- STORE CREATION ---
 export const useAppStore = create<AppState & AppActions>()(
 	persist(
 		(set, get) => ({
 			...INITIAL_STATE,
 
-			// --- ACTIONS ---
-			setError: (message) => set({ error: message }),
+			addPreset: (specId) => {
+				const item = itemFromSpec(specId);
+				if (item) set((s) => ({ items: [...s.items, item] }));
+			},
 
-			addItemToCart: (key) => {
-				get().setError(null);
-				if (!key) {
-					get().setError("Please select an appliance to add.");
-					return;
-				}
+			addCustom: () =>
+				set((s) => ({
+					items: [
+						...s.items,
+						{
+							id: newId(),
+							specId: "custom",
+							name: "",
+							mode: "hours",
+							watts: 100,
+							hoursPerDay: 1,
+							daysPerWeek: 7,
+							kwhPerCycle: 1,
+							cyclesPerWeek: 3,
+							monthsPerYear: 12,
+							standbyWatts: 0,
+							qty: 1,
+						},
+					],
+				})),
 
-				let newItem: CartItem;
-				const baseItem = {
-					id: uuidv4(),
-					usageValue: 1,
-					usageFrequency: "daily" as const,
-					qty: 1,
-				};
+			updateItem: (id, patch) =>
+				set((s) => ({
+					items: s.items.map((it) => (it.id === id ? { ...it, ...patch } : it)),
+				})),
 
-				if (key === "custom") {
-					newItem = {
-						...baseItem,
-						key: "custom",
-						name: "Custom Appliance",
-						wattage: 100,
+			removeItem: (id) =>
+				set((s) => {
+					const index = s.items.findIndex((it) => it.id === id);
+					if (index < 0) return s;
+					return {
+						items: s.items.filter((it) => it.id !== id),
+						lastRemoved: { item: s.items[index], index },
 					};
-				} else {
-					const appliance = APPLIANCE_DATA[key];
-					newItem = {
-						...baseItem,
-						key,
-						name: appliance.name,
-						wattage: appliance.wattage,
-						// Set specific defaults for certain appliances
-						usageFrequency: appliance.defaultFrequency || "daily",
-						usageValue: appliance.defaultValue || 1,
-					};
-				}
+				}),
 
-				set((state) => ({ cart: [...state.cart, newItem] }));
+			undoRemove: () => {
+				const { lastRemoved, items } = get();
+				if (!lastRemoved) return;
+				const next = [...items];
+				next.splice(Math.min(lastRemoved.index, next.length), 0, lastRemoved.item);
+				set({ items: next, lastRemoved: null });
 			},
 
-			updateCartItem: (id, patch) => {
-				set((state) => ({
-					cart: state.cart.map((item) =>
-						item.id === id ? { ...item, ...patch } : item
-					),
-				}));
+			duplicateItem: (id) =>
+				set((s) => {
+					const index = s.items.findIndex((it) => it.id === id);
+					if (index < 0) return s;
+					const next = [...s.items];
+					next.splice(index + 1, 0, { ...s.items[index], id: newId() });
+					return { items: next };
+				}),
+
+			clearItems: () => set({ items: [], plan: [], lastRemoved: null }),
+
+			loadTemplate: (templateId) => {
+				const t = TEMPLATES.find((x) => x.id === templateId);
+				if (!t) return;
+				const items = t.items
+					.map((x) => itemFromSpec(x.id, x.qty))
+					.filter((x): x is ApplianceItem => x !== null);
+				set({ items, plan: [], lastRemoved: null });
 			},
 
-			removeCartItem: (id) => {
-				set((state) => ({ cart: state.cart.filter((item) => item.id !== id) }));
+			setRegion: (regionId) =>
+				set({ settings: settingsForRegion(regionId), regionConfirmed: true }),
+
+			guessRegion: () => {
+				if (get().regionConfirmed) return;
+				set({ settings: settingsForRegion(guessRegionId()) });
 			},
 
-			clearCart: () => set({ cart: [] }),
+			updateSettings: (patch) =>
+				set((s) => ({ settings: { ...s.settings, ...patch }, regionConfirmed: true })),
 
-			updateSettings: (patch) => {
-				set((state) => ({ settings: { ...state.settings, ...patch } }));
-			},
+			setPeriod: (period) => set({ period }),
 
-			reset: () => {
-				set(INITIAL_STATE);
-			},
-
-			// --- GETTERS ---
-			getTotals: () => {
-				const { cart, settings } = get();
-				const totalKwhPerDay = cart.reduce((acc, it) => {
-					// Calculate kWh for the item's period (day or week)
-					let kwh = (it.wattage * it.usageValue * it.qty) / 1000;
-					// If usage is weekly, average it out to a daily value
-					if (it.usageFrequency === "weekly") {
-						kwh /= 7;
-					}
-					return acc + kwh;
-				}, 0);
-
-				const totalCostPerDay = totalKwhPerDay * settings.pricePerKwh;
-				const totalCo2PerDay = totalKwhPerDay * settings.emissionFactor;
-
-				return {
-					kwh: {
-						day: totalKwhPerDay,
-						month: totalKwhPerDay * 30,
-						year: totalKwhPerDay * 365,
-					},
-					cost: {
-						day: totalCostPerDay,
-						month: totalCostPerDay * 30,
-						year: totalCostPerDay * 365,
-					},
-					co2: {
-						day: totalCo2PerDay,
-						month: totalCo2PerDay * 30,
-						year: totalCo2PerDay * 365,
-					},
-				};
-			},
-
-			exportCsv: () => {
-				const { cart, settings, getTotals } = get();
-				const totals = getTotals();
-				const header = [
-					"name",
-					"wattage_w",
-					"usage_value",
-					"usage_frequency",
-					"quantity",
-					"avg_kwh_per_day",
-					"avg_cost_per_day",
-				];
-				const rows = cart.map((it) => {
-					let kwh = (it.wattage * it.usageValue * it.qty) / 1000;
-					if (it.usageFrequency === "weekly") kwh /= 7;
-					const cost = kwh * settings.pricePerKwh;
-					return [
-						it.name,
-						it.wattage,
-						it.usageValue,
-						it.usageFrequency,
-						it.qty,
-						kwh.toFixed(3),
-						cost.toFixed(3),
-					].join(",");
-				});
-
-				const summary = [
-					`total_kwh_day,${totals.kwh.day.toFixed(3)}`,
-					`total_cost_day,${totals.cost.day.toFixed(2)}`,
-					`co2_kg_day,${totals.co2.day.toFixed(3)}`,
-				];
-
-				const csv = [header.join(","), ...rows, "", "SUMMARY", ...summary].join(
-					"\n"
-				);
-				const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-				const url = URL.createObjectURL(blob);
-				const a = document.createElement("a");
-				a.href = url;
-				a.download = `green-awareness-export-${
-					new Date().toISOString().split("T")[0]
-				}.csv`;
-				a.click();
-				URL.revokeObjectURL(url);
-				a.remove();
-			},
+			togglePlan: (tipId) =>
+				set((s) => ({
+					plan: s.plan.includes(tipId)
+						? s.plan.filter((x) => x !== tipId)
+						: [...s.plan, tipId],
+				})),
 		}),
 		{
 			name: "green-awareness-storage",
+			version: 2,
 			storage: createJSONStorage(() => localStorage),
-			partialize: (state) => ({ cart: state.cart, settings: state.settings }),
+			partialize: (s) => ({
+				items: s.items,
+				settings: s.settings,
+				regionConfirmed: s.regionConfirmed,
+				period: s.period,
+				plan: s.plan,
+			}),
+			migrate: (persisted, version) => {
+				if (version >= 2) return persisted as AppState;
+				// v0/v1 stored `cart` rows with hours per day or hours per week.
+				type OldItem = {
+					key?: string;
+					name?: string;
+					wattage?: number;
+					usageValue?: number;
+					usageFrequency?: "daily" | "weekly";
+					qty?: number;
+				};
+				const old = (persisted ?? {}) as {
+					cart?: OldItem[];
+					settings?: { pricePerKwh?: number; emissionFactor?: number };
+				};
+				const items: ApplianceItem[] = (old.cart ?? []).map((c) => {
+					const weekly = c.usageFrequency === "weekly";
+					return {
+						id: newId(),
+						specId: "custom",
+						name: c.name ?? "",
+						mode: "hours",
+						watts: Number(c.wattage) || 0,
+						hoursPerDay: weekly ? Number(c.usageValue) || 0 : Math.min(24, Number(c.usageValue) || 0),
+						daysPerWeek: weekly ? 1 : 7,
+						kwhPerCycle: 1,
+						cyclesPerWeek: 3,
+						monthsPerYear: 12,
+						standbyWatts: 0,
+						qty: Number(c.qty) || 1,
+					};
+				});
+				return {
+					...INITIAL_STATE,
+					items,
+					settings: {
+						regionId: "us",
+						pricePerKwh: old.settings?.pricePerKwh ?? INITIAL_STATE.settings.pricePerKwh,
+						intensity: old.settings?.emissionFactor ?? INITIAL_STATE.settings.intensity,
+					},
+				};
+			},
 		}
 	)
 );

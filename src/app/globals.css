@@ -113,16 +113,18 @@
 }
 
 @layer base {
-	/* Hide scrollbars globally */
-
 	* {
 		@apply border-border outline-ring/50;
 	}
 	body {
 		@apply bg-background text-foreground;
 	}
-	.recharts-wrapper,
-	.recharts-surface {
-		overflow: visible !important;
+	html {
+		scroll-behavior: smooth;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		html {
+			scroll-behavior: auto;
+		}
 	}
 }
