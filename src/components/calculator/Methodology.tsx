@@ -31,16 +31,16 @@ export function Methodology() {
 			{ITEMS.map((it) => (
 				<details
 					key={it.q}
-					className="group rounded-2xl border bg-card p-5 open:bg-card [&_summary::-webkit-details-marker]:hidden">
-					<summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium">
+					className="group rounded-3xl border bg-card p-5 shadow-sm sm:p-6 [&_summary::-webkit-details-marker]:hidden">
+					<summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold">
 						{it.q}
 						<span
-							className="text-xl leading-none text-muted-foreground transition-transform group-open:rotate-45"
+							className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-2xl leading-none text-muted-foreground transition-transform group-open:rotate-45"
 							aria-hidden>
 							+
 						</span>
 					</summary>
-					<p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+					<p className="mt-3 text-base leading-relaxed text-muted-foreground">
 						{it.a}
 					</p>
 				</details>

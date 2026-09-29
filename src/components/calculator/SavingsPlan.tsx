@@ -1,36 +1,41 @@
 "use client";
 
-import { Check, Leaf, Sun, Clock, Zap } from "lucide-react";
+import { Check, Clock, Leaf, PiggyBank, Plug, Sun, Target } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import { applianceVisual } from "@/lib/data/appliances";
 import { formatMass, formatMoney, formatNumber } from "@/lib/calc";
 import type { Effort } from "@/lib/tips";
 import { cn } from "@/lib/utils";
+import { IconTile } from "./ui";
 import { useResults } from "./useResults";
 
 const EFFORT_STYLE: Record<Effort, string> = {
-	Free: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300",
-	"Low cost": "bg-sky-500/15 text-sky-800 dark:text-sky-300",
-	Investment: "bg-violet-500/15 text-violet-800 dark:text-violet-300",
+	Free: "bg-emerald-100 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-300",
+	"Low cost": "bg-sky-100 text-sky-800 dark:bg-sky-400/15 dark:text-sky-300",
+	Investment: "bg-violet-100 text-violet-800 dark:bg-violet-400/15 dark:text-violet-300",
 };
 
 const BEYOND = [
 	{
 		icon: Leaf,
+		tone: "bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300",
 		title: "Switch to a renewable tariff",
 		detail:
-			"Choose a supplier or plan backed by wind and solar. It can cut the CO₂ from your electricity sharply without changing how you live.",
+			"Choose a supplier or plan backed by wind and solar. It cuts the CO₂ from your electricity without changing how you live.",
 	},
 	{
 		icon: Sun,
-		title: "Consider rooftop or community solar",
+		tone: "bg-amber-100 text-amber-700 dark:bg-amber-400/15 dark:text-amber-300",
+		title: "Look into solar",
 		detail:
-			"If you own your roof, panels can cover a large part of daytime use. Renters can often join a community solar scheme.",
+			"If you own your roof, panels can cover much of your daytime use. Renters can often join a community solar scheme.",
 	},
 	{
 		icon: Clock,
-		title: "Shift heavy loads to off-peak hours",
+		tone: "bg-sky-100 text-sky-700 dark:bg-sky-400/15 dark:text-sky-300",
+		title: "Use power when it's cheap",
 		detail:
-			"If your tariff has cheaper night or weekend rates, run the dishwasher, laundry and car charging then. It is cheaper and often cleaner too.",
+			"If your tariff has cheaper night or weekend rates, run the dishwasher, laundry and car charging then.",
 	},
 ];
 
@@ -41,48 +46,56 @@ export function SavingsPlan() {
 	const loc = region.locale;
 	const money = (n: number) => formatMoney(n, region.currency, loc);
 
+	const potentialCost = tips.reduce((s, t) => s + t.costSaved, 0);
 	const potentialKwh = tips.reduce((s, t) => s + t.kwhSaved, 0);
 
 	return (
-		<div className="flex flex-col gap-6">
+		<div className="flex flex-col gap-8">
 			{rows.length === 0 ? (
-				<div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-					Add your appliances in the calculator above and we&apos;ll show you
-					the changes that save you the most.
+				<div className="flex flex-col items-center gap-4 rounded-3xl border-2 border-dashed p-10 text-center">
+					<IconTile icon={PiggyBank} tone="bg-primary/10 text-primary" size="lg" />
+					<p className="max-w-md text-lg text-muted-foreground">
+						Add your appliances above and we&apos;ll show the changes that save
+						you the most.
+					</p>
 				</div>
 			) : tips.length === 0 ? (
-				<div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">
-					Nice, we couldn&apos;t find any obvious quick wins in your list. Check
-					the ideas below for going further.
+				<div className="rounded-3xl border bg-card p-6 text-lg text-muted-foreground">
+					Nice, there are no obvious quick wins in your list. The ideas below can
+					take you further.
 				</div>
 			) : (
 				<>
-					<div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+					<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
 						<PlanStat
-							label="Possible savings"
-							value={`${money(tips.reduce((s, t) => s + t.costSaved, 0))} / yr`}
-							sub={`${formatNumber((potentialKwh / Math.max(totals.kwh, 1e-9)) * 100, loc, 0)}% of your use`}
+							icon={Target}
+							label="You could save up to"
+							value={money(potentialCost)}
+							sub={`a year · ${formatNumber((potentialKwh / Math.max(totals.kwh, 1e-9)) * 100, loc, 0)}% of your use`}
 						/>
 						<PlanStat
-							label="In your plan"
-							value={`${money(plan.cost)} / yr`}
-							sub={`${formatNumber(plan.kwh, loc, 0)} kWh a year`}
-							highlight={plan.kwh > 0}
-						/>
-						<PlanStat
-							label="CO₂e avoided"
-							value={`${formatMass(plan.co2, loc)} / yr`}
+							icon={PiggyBank}
+							label="Your plan saves"
+							value={money(plan.cost)}
 							sub={
 								planIds.length === 0
-									? "Tick the changes you'll make"
-									: `${planIds.length} ${planIds.length === 1 ? "change" : "changes"} planned`
+									? "Tick the changes below"
+									: `a year · ${planIds.length} ${planIds.length === 1 ? "change" : "changes"}`
 							}
+							highlight
+						/>
+						<PlanStat
+							icon={Leaf}
+							label="Carbon you avoid"
+							value={formatMass(plan.co2, loc)}
+							sub="CO₂e a year"
 						/>
 					</div>
 
 					<ul className="flex flex-col gap-3">
 						{tips.map((t) => {
 							const on = planIds.includes(t.id);
+							const v = t.specId ? applianceVisual(t.specId) : null;
 							return (
 								<li key={t.id}>
 									<button
@@ -91,41 +104,57 @@ export function SavingsPlan() {
 										aria-checked={on}
 										onClick={() => togglePlan(t.id)}
 										className={cn(
-											"flex w-full items-start gap-4 rounded-2xl border bg-card p-4 text-left transition-colors sm:p-5",
-											on ? "border-primary bg-primary/5" : "hover:border-primary/50"
+											"flex w-full flex-col gap-4 rounded-3xl border-2 bg-card p-5 text-left shadow-sm transition-colors sm:flex-row sm:items-center",
+											on ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
 										)}>
-										<span
-											className={cn(
-												"mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md border-2 transition-colors",
-												on ? "border-primary bg-primary text-white" : "border-muted-foreground/40"
-											)}
-											aria-hidden>
-											{on && <Check className="size-4" strokeWidth={3} />}
-										</span>
-										<span className="min-w-0 flex-1">
-											<span className="flex flex-wrap items-center gap-2">
-												<span className="font-medium">{t.title}</span>
-												<span
-													className={cn(
-														"rounded-full px-2 py-0.5 text-[11px] font-medium",
-														EFFORT_STYLE[t.effort]
-													)}>
-													{t.effort}
+										<span className="flex items-start gap-4 sm:flex-1 sm:items-center">
+											<IconTile
+												icon={v?.icon ?? Plug}
+												tone={v?.tone ?? "bg-amber-100 text-amber-700 dark:bg-amber-400/15 dark:text-amber-300"}
+											/>
+											<span className="min-w-0 flex-1">
+												<span className="flex flex-wrap items-center gap-2">
+													<span className="text-lg font-semibold leading-snug">
+														{t.title}
+													</span>
+													<span
+														className={cn(
+															"rounded-full px-2.5 py-0.5 text-xs font-semibold",
+															EFFORT_STYLE[t.effort]
+														)}>
+														{t.effort}
+													</span>
+												</span>
+												<span className="mt-1 block text-base text-muted-foreground">
+													{t.detail}
 												</span>
 											</span>
-											<span className="mt-1 block text-sm text-muted-foreground">
-												{t.detail}
-											</span>
 										</span>
-										<span className="shrink-0 text-right">
-											<span className="block font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">
-												{money(t.costSaved)}
+										<span className="flex items-center justify-between gap-4 border-t pt-4 sm:border-0 sm:pt-0">
+											<span className="sm:text-right">
+												<span className="block text-2xl font-bold tabular-nums text-emerald-700 dark:text-emerald-400">
+													{money(t.costSaved)}
+												</span>
+												<span className="block text-sm text-muted-foreground">
+													a year · {formatMass(t.co2Saved, loc)} CO₂e
+												</span>
 											</span>
-											<span className="block text-xs text-muted-foreground tabular-nums">
-												per year
-											</span>
-											<span className="mt-1 block text-xs text-muted-foreground tabular-nums">
-												{formatMass(t.co2Saved, loc)} CO₂e
+											<span
+												className={cn(
+													"flex h-11 shrink-0 items-center gap-2 rounded-xl px-4 text-sm font-semibold transition-colors",
+													on
+														? "bg-primary text-primary-foreground"
+														: "bg-muted text-foreground"
+												)}
+												aria-hidden>
+												<span
+													className={cn(
+														"flex size-5 items-center justify-center rounded-md border-2",
+														on ? "border-primary-foreground" : "border-muted-foreground/50"
+													)}>
+													{on && <Check className="size-3.5" strokeWidth={3.5} />}
+												</span>
+												{on ? "In my plan" : "I'll do this"}
 											</span>
 										</span>
 									</button>
@@ -137,16 +166,13 @@ export function SavingsPlan() {
 			)}
 
 			<div>
-				<h3 className="flex items-center gap-2 text-lg font-semibold">
-					<Zap className="size-5 text-primary" aria-hidden />
-					Going further
-				</h3>
-				<ul className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
-					{BEYOND.map(({ icon: Icon, title, detail }) => (
-						<li key={title} className="rounded-2xl border bg-card p-5">
-							<Icon className="size-5 text-primary" aria-hidden />
-							<div className="mt-3 font-medium">{title}</div>
-							<p className="mt-1 text-sm text-muted-foreground">{detail}</p>
+				<h3 className="text-xl font-bold">Going further</h3>
+				<ul className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+					{BEYOND.map((b) => (
+						<li key={b.title} className="rounded-3xl border bg-card p-6 shadow-sm">
+							<IconTile icon={b.icon} tone={b.tone} />
+							<div className="mt-4 text-lg font-semibold">{b.title}</div>
+							<p className="mt-1 text-base text-muted-foreground">{b.detail}</p>
 						</li>
 					))}
 				</ul>
@@ -156,11 +182,13 @@ export function SavingsPlan() {
 }
 
 function PlanStat({
+	icon,
 	label,
 	value,
 	sub,
 	highlight,
 }: {
+	icon: React.ComponentProps<typeof IconTile>["icon"];
 	label: string;
 	value: string;
 	sub: string;
@@ -169,12 +197,22 @@ function PlanStat({
 	return (
 		<div
 			className={cn(
-				"rounded-2xl border bg-card p-4",
-				highlight && "border-primary/60 bg-primary/5"
+				"flex items-center gap-4 rounded-3xl border p-5 shadow-sm",
+				highlight ? "border-primary bg-primary text-primary-foreground" : "bg-card"
 			)}>
-			<div className="text-xs text-muted-foreground">{label}</div>
-			<div className="mt-1 text-2xl font-semibold tabular-nums">{value}</div>
-			<div className="mt-0.5 text-xs text-muted-foreground">{sub}</div>
+			<IconTile
+				icon={icon}
+				tone={highlight ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/10 text-primary"}
+			/>
+			<div className="min-w-0">
+				<div className={cn("text-sm", highlight ? "opacity-90" : "text-muted-foreground")}>
+					{label}
+				</div>
+				<div className="text-2xl font-bold tabular-nums">{value}</div>
+				<div className={cn("text-sm", highlight ? "opacity-90" : "text-muted-foreground")}>
+					{sub}
+				</div>
+			</div>
 		</div>
 	);
 }

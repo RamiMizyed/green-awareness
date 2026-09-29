@@ -1,15 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, Plus, Search } from "lucide-react";
+import { Check, LayoutGrid, Plus, Search } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import {
 	APPLIANCES,
 	CATEGORIES,
+	CATEGORY_THEME,
 	CUSTOM_ICON,
+	CUSTOM_TILE,
+	type ApplianceSpec,
 	type Category,
 } from "@/lib/data/appliances";
-import { formatNumber, kwhPerYear, type ApplianceItem } from "@/lib/calc";
+import { formatNumber, kwhPerYear } from "@/lib/calc";
 import {
 	Dialog,
 	DialogContent,
@@ -20,10 +23,11 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { IconTile } from "./ui";
 
 /** Typical monthly use of a preset, shown on each tile. */
-const typicalMonthlyKwh = (spec: (typeof APPLIANCES)[number]) =>
-	kwhPerYear({ ...spec, specId: spec.id } as ApplianceItem) / 12;
+const typicalMonthlyKwh = (spec: ApplianceSpec) =>
+	kwhPerYear({ ...spec, specId: spec.id }) / 12;
 
 export function AppliancePicker({ trigger }: { trigger: React.ReactNode }) {
 	const [open, setOpen] = useState(false);
@@ -42,7 +46,7 @@ export function AppliancePicker({ trigger }: { trigger: React.ReactNode }) {
 	const q = query.trim().toLowerCase();
 	const visible = APPLIANCES.filter(
 		(a) =>
-			(category === "all" || a.category === category) &&
+			(q ? true : category === "all" || a.category === category) &&
 			(!q || a.name.toLowerCase().includes(q))
 	);
 
@@ -54,121 +58,144 @@ export function AppliancePicker({ trigger }: { trigger: React.ReactNode }) {
 				if (!o) setQuery("");
 			}}>
 			<DialogTrigger asChild>{trigger}</DialogTrigger>
-			<DialogContent className="flex max-h-[min(720px,90svh)] flex-col gap-0 p-0 sm:max-w-3xl">
-				<DialogHeader className="border-b p-5 pb-4 text-left">
-					<DialogTitle>Add appliances</DialogTitle>
-					<DialogDescription>
-						Tap everything you have. You can fine-tune the numbers afterwards.
+			<DialogContent className="flex h-[min(820px,92svh)] flex-col gap-0 rounded-3xl p-0 sm:max-w-4xl max-sm:h-svh max-sm:max-w-none max-sm:rounded-none max-sm:border-0">
+				<DialogHeader className="border-b p-4 pr-12 text-left sm:p-6">
+					<DialogTitle className="text-2xl">Add appliances</DialogTitle>
+					<DialogDescription className="text-base max-sm:sr-only">
+						Tap everything you have. Tap again to add another.
 					</DialogDescription>
-					<div className="relative mt-3">
+					<div className="relative mt-2 sm:mt-4">
 						<Search
-							className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+							className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground"
 							aria-hidden
 						/>
 						<input
 							type="search"
 							value={query}
 							onChange={(e) => setQuery(e.target.value)}
-							placeholder="Search, e.g. fridge, heater, TV"
+							placeholder="Search: fridge, heater, TV…"
 							aria-label="Search appliances"
-							className="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
+							className="h-12 w-full rounded-xl border border-input bg-card pl-12 pr-4 text-base outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
 						/>
-					</div>
-					<div
-						className="-mx-1 mt-3 flex gap-1.5 overflow-x-auto px-1 pb-1"
-						role="tablist"
-						aria-label="Categories">
-						{[{ id: "all" as const, label: "All" }, ...CATEGORIES].map((c) => (
-							<button
-								key={c.id}
-								type="button"
-								role="tab"
-								aria-selected={category === c.id}
-								onClick={() => setCategory(c.id)}
-								className={cn(
-									"shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-									category === c.id
-										? "border-primary bg-primary text-white"
-										: "hover:bg-muted"
-								)}>
-								{c.label}
-							</button>
-						))}
 					</div>
 				</DialogHeader>
 
-				<div className="min-h-0 flex-1 overflow-y-auto p-5">
-					{visible.length === 0 ? (
-						<p className="py-10 text-center text-sm text-muted-foreground">
-							Nothing matches &ldquo;{query}&rdquo;. Add it as a custom
-							appliance below.
-						</p>
-					) : (
-						<ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-							{visible.map((a) => {
-								const Icon = a.icon;
-								const n = counts.get(a.id) ?? 0;
-								return (
+				<div className="flex min-h-0 flex-1 flex-col sm:flex-row">
+					{/* Categories: a scrolling row on phones, a sidebar on larger screens */}
+					<nav
+						aria-label="Categories"
+						className={cn(
+							"flex shrink-0 gap-2 overflow-x-auto border-b p-3 sm:w-56 sm:flex-col sm:overflow-y-auto sm:border-b-0 sm:border-r sm:p-4",
+							q && "pointer-events-none opacity-40"
+						)}>
+						{[{ id: "all" as const, label: "Everything" }, ...CATEGORIES].map((c) => {
+							const Icon = c.id === "all" ? LayoutGrid : CATEGORY_THEME[c.id].icon;
+							const active = category === c.id;
+							return (
+								<button
+									key={c.id}
+									type="button"
+									aria-pressed={active}
+									onClick={() => setCategory(c.id)}
+									className={cn(
+										"flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition-colors",
+										active
+											? "bg-primary text-primary-foreground"
+											: "text-muted-foreground hover:bg-muted hover:text-foreground"
+									)}>
+									<Icon className="size-5 shrink-0" aria-hidden />
+									{c.label}
+								</button>
+							);
+						})}
+					</nav>
+
+					<div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+						{visible.length === 0 ? (
+							<div className="flex flex-col items-center gap-4 py-12 text-center">
+								<p className="text-base text-muted-foreground">
+									No match for &ldquo;{query}&rdquo;.
+								</p>
+								<Button
+									variant="outline"
+									onClick={() => {
+										addCustom(query.trim());
+										setOpen(false);
+									}}>
+									<Plus aria-hidden /> Add &ldquo;{query}&rdquo; as your own
+								</Button>
+							</div>
+						) : (
+							<ul className="grid grid-cols-2 gap-3 md:grid-cols-3">
+								{visible.map((a) => (
 									<li key={a.id}>
-										<button
-											type="button"
-											onClick={() => addPreset(a.id)}
-											className={cn(
-												"group flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors hover:border-primary/60 hover:bg-primary/5",
-												n > 0 && "border-primary/50 bg-primary/5"
-											)}>
-											<span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground/80">
-												<Icon className="size-5" aria-hidden />
-											</span>
-											<span className="min-w-0 flex-1">
-												<span className="block truncate text-sm font-medium">
-													{a.name}
-												</span>
-												<span className="block text-xs text-muted-foreground">
-													~{formatNumber(typicalMonthlyKwh(a), "en-US", 0)} kWh a
-													month
-												</span>
-											</span>
-											<span
-												className={cn(
-													"flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-													n > 0
-														? "bg-primary text-white"
-														: "text-muted-foreground group-hover:text-primary"
-												)}
-												aria-label={n > 0 ? `${n} added` : "Add"}>
-												{n > 0 ? (
-													n > 1 ? (
-														n
-													) : (
-														<Check className="size-3.5" />
-													)
-												) : (
-													<Plus className="size-4" />
-												)}
-											</span>
-										</button>
+										<Tile spec={a} count={counts.get(a.id) ?? 0} onAdd={() => addPreset(a.id)} />
 									</li>
-								);
-							})}
-						</ul>
-					)}
+								))}
+							</ul>
+						)}
+					</div>
 				</div>
 
-				<div className="flex flex-col-reverse gap-2 border-t p-4 sm:flex-row sm:items-center sm:justify-between">
+				<div className="flex items-center justify-between gap-2 border-t p-3 sm:p-4 sm:px-6">
 					<Button
-						variant="outline"
+						variant="ghost"
 						onClick={() => {
 							addCustom();
 							setOpen(false);
 						}}>
-						<CUSTOM_ICON aria-hidden /> Something else? Add a custom appliance
+						<IconTile icon={CUSTOM_ICON} tone={CUSTOM_TILE} size="sm" className="size-8 [&>svg]:size-4" />
+						<span className="max-sm:sr-only">Something else</span>
+						<span className="sm:hidden" aria-hidden>Other</span>
 					</Button>
-					<Button onClick={() => setOpen(false)}>
-						Done{items.length > 0 && ` (${items.length} in your list)`}
+					<Button size="lg" onClick={() => setOpen(false)}>
+						<Check aria-hidden />
+						Done
+						{items.length > 0 && (
+							<span className="max-sm:hidden">· {items.length} in your home</span>
+						)}
 					</Button>
 				</div>
 			</DialogContent>
 		</Dialog>
+	);
+}
+
+function Tile({
+	spec,
+	count,
+	onAdd,
+}: {
+	spec: ApplianceSpec;
+	count: number;
+	onAdd: () => void;
+}) {
+	const theme = CATEGORY_THEME[spec.category];
+	const added = count > 0;
+	return (
+		<button
+			type="button"
+			onClick={onAdd}
+			aria-label={`Add ${spec.name}${added ? `, ${count} added` : ""}`}
+			className={cn(
+				"relative flex h-full w-full flex-col items-center gap-3 rounded-2xl border-2 p-4 text-center transition-colors",
+				added
+					? "border-primary bg-primary/5"
+					: "border-border hover:border-primary/50 hover:bg-muted/60"
+			)}>
+			<IconTile icon={spec.icon} tone={theme.tile} size="lg" />
+			<span className="text-base font-semibold leading-snug">{spec.name}</span>
+			<span className="mt-auto text-sm text-muted-foreground">
+				~{formatNumber(typicalMonthlyKwh(spec), "en-US", 0)} kWh a month
+			</span>
+			<span
+				className={cn(
+					"absolute right-2.5 top-2.5 flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-sm font-bold",
+					added ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+				)}
+				aria-hidden>
+				{added ? count > 1 ? `×${count}` : <Check className="size-4" strokeWidth={3} /> : <Plus className="size-4" strokeWidth={3} />}
+			</span>
+		</button>
 	);
 }

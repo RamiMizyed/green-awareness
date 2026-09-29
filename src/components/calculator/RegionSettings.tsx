@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, RotateCcw } from "lucide-react";
+import { Info, RotateCcw } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { getRegion, REGIONS } from "@/lib/data/regions";
 import { currencySymbol } from "@/lib/calc";
@@ -11,7 +11,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { NumberField } from "./NumberField";
+import { NumberField, StepHeader } from "./ui";
 
 export function RegionSettings() {
 	const settings = useAppStore((s) => s.settings);
@@ -27,44 +27,28 @@ export function RegionSettings() {
 	return (
 		<section
 			aria-labelledby="region-heading"
-			className="rounded-2xl border bg-card p-5 sm:p-6">
-			<div className="flex items-start justify-between gap-4">
-				<div>
-					<h3
-						id="region-heading"
-						className="flex items-center gap-2 text-lg font-semibold">
-						<MapPin className="size-5 text-primary" aria-hidden />
-						Where you live
-					</h3>
-					<p className="mt-1 text-sm text-muted-foreground">
-						Sets your electricity price and how clean your grid is.
-					</p>
-				</div>
-				{customised && (
-					<button
-						type="button"
-						onClick={() => setRegion(region.id)}
-						className="inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">
-						<RotateCcw className="size-3.5" aria-hidden />
-						Reset to {region.name}
-					</button>
-				)}
-			</div>
+			className="rounded-3xl border bg-card p-5 shadow-sm sm:p-7">
+			<StepHeader
+				id="region-heading"
+				step={1}
+				title="Where do you live?"
+				text="This sets your electricity price and how clean your power is."
+			/>
 
-			<div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-[1.4fr_1fr_1fr]">
-				<div className="flex flex-col gap-1 min-w-0">
-					<span className="text-xs font-medium text-muted-foreground">
+			<div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-[1.3fr_1fr_1fr]">
+				<div className="flex min-w-0 flex-col gap-1.5 sm:col-span-2 xl:col-span-1">
+					<span className="text-sm font-medium text-muted-foreground">
 						Country or region
 					</span>
 					<Select value={region.id} onValueChange={setRegion}>
 						<SelectTrigger
-							className="!h-10 w-full bg-background"
+							className="!h-12 w-full rounded-xl bg-card px-4 text-lg font-semibold"
 							aria-label="Country or region">
 							<SelectValue />
 						</SelectTrigger>
-						<SelectContent className="max-h-80">
+						<SelectContent className="max-h-96">
 							{REGIONS.map((r) => (
-								<SelectItem key={r.id} value={r.id}>
+								<SelectItem key={r.id} value={r.id} className="py-2.5 text-base">
 									{r.name}
 								</SelectItem>
 							))}
@@ -72,26 +56,37 @@ export function RegionSettings() {
 					</Select>
 				</div>
 				<NumberField
-					label="Your price per kWh"
+					label="Price per kWh"
 					unit={symbol}
 					value={settings.pricePerKwh}
-					step={0.01}
 					max={100_000}
 					onChange={(pricePerKwh) => updateSettings({ pricePerKwh })}
 				/>
 				<NumberField
-					label="Grid carbon intensity"
-					unit="kg/kWh"
+					label="Grid CO₂ per kWh"
+					unit="kg"
 					value={settings.intensity}
-					step={0.01}
 					max={2}
 					onChange={(intensity) => updateSettings({ intensity })}
 				/>
 			</div>
-			<p className="mt-3 text-xs text-muted-foreground">
-				Prices are typical figures and change often. For an accurate result,
-				use the price per kWh (unit rate) printed on your electricity bill.
-			</p>
+
+			<div className="mt-4 flex flex-wrap items-start justify-between gap-3">
+				<p className="flex max-w-xl gap-2 text-sm text-muted-foreground">
+					<Info className="mt-0.5 size-4 shrink-0" aria-hidden />
+					Prices here are typical. For the most accurate result, copy the
+					price per kWh from your electricity bill.
+				</p>
+				{customised && (
+					<button
+						type="button"
+						onClick={() => setRegion(region.id)}
+						className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
+						<RotateCcw className="size-4" aria-hidden />
+						Use {region.name} defaults
+					</button>
+				)}
+			</div>
 		</section>
 	);
 }

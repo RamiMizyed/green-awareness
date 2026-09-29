@@ -18,7 +18,7 @@ interface AppState {
 
 interface AppActions {
 	addPreset: (specId: string) => void;
-	addCustom: () => void;
+	addCustom: (name?: string) => void;
 	updateItem: (id: string, patch: Partial<Omit<ApplianceItem, "id">>) => void;
 	removeItem: (id: string) => void;
 	undoRemove: () => void;
@@ -80,14 +80,14 @@ export const useAppStore = create<AppState & AppActions>()(
 				if (item) set((s) => ({ items: [...s.items, item] }));
 			},
 
-			addCustom: () =>
+			addCustom: (name = "") =>
 				set((s) => ({
 					items: [
 						...s.items,
 						{
 							id: newId(),
 							specId: "custom",
-							name: "",
+							name,
 							mode: "hours",
 							watts: 100,
 							hoursPerDay: 1,

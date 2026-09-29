@@ -54,6 +54,55 @@ export const CATEGORIES: { id: Category; label: string }[] = [
 ];
 
 /**
+ * Visual identity per category. `tile` colours the big icon squares, `hex`
+ * is used for bars and legends. Classes are written out in full so Tailwind
+ * can see them.
+ */
+export const CATEGORY_THEME: Record<
+	Category,
+	{ tile: string; hex: string; icon: LucideIcon }
+> = {
+	kitchen: {
+		tile: "bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300",
+		hex: "#10b981",
+		icon: CookingPot,
+	},
+	climate: {
+		tile: "bg-orange-100 text-orange-700 dark:bg-orange-400/15 dark:text-orange-300",
+		hex: "#f97316",
+		icon: ThermometerSun,
+	},
+	laundry: {
+		tile: "bg-sky-100 text-sky-700 dark:bg-sky-400/15 dark:text-sky-300",
+		hex: "#0ea5e9",
+		icon: WashingMachine,
+	},
+	entertainment: {
+		tile: "bg-violet-100 text-violet-700 dark:bg-violet-400/15 dark:text-violet-300",
+		hex: "#8b5cf6",
+		icon: Tv,
+	},
+	office: {
+		tile: "bg-indigo-100 text-indigo-700 dark:bg-indigo-400/15 dark:text-indigo-300",
+		hex: "#6366f1",
+		icon: Laptop,
+	},
+	lighting: {
+		tile: "bg-amber-100 text-amber-700 dark:bg-amber-400/15 dark:text-amber-300",
+		hex: "#f59e0b",
+		icon: Lightbulb,
+	},
+	other: {
+		tile: "bg-pink-100 text-pink-700 dark:bg-pink-400/15 dark:text-pink-300",
+		hex: "#ec4899",
+		icon: Plug,
+	},
+};
+
+export const CUSTOM_TILE =
+	"bg-zinc-100 text-zinc-700 dark:bg-zinc-400/15 dark:text-zinc-300";
+
+/**
  * A preset appliance. Values are typical household averages, meant as a
  * starting point the user can adjust.
  *
@@ -442,6 +491,30 @@ export const FALLBACK_ICON: LucideIcon = Zap;
 const BY_ID = new Map(APPLIANCES.map((a) => [a.id, a]));
 
 export const getSpec = (id: string) => BY_ID.get(id);
+
+const CATEGORY_LABEL = new Map(CATEGORIES.map((c) => [c.id, c.label]));
+
+/** Icon, colour and category label for any list item, presets or custom. */
+export function applianceVisual(specId: string) {
+	const s = BY_ID.get(specId);
+	if (!s) {
+		return {
+			icon: specId === "custom" ? CUSTOM_ICON : FALLBACK_ICON,
+			tone: CUSTOM_TILE,
+			hex: "#71717a",
+			category: "other" as Category,
+			categoryLabel: "Custom",
+		};
+	}
+	const theme = CATEGORY_THEME[s.category];
+	return {
+		icon: s.icon,
+		tone: theme.tile,
+		hex: theme.hex,
+		category: s.category,
+		categoryLabel: CATEGORY_LABEL.get(s.category)!,
+	};
+}
 
 /** Quick-start households, each a list of preset ids with optional overrides. */
 export const TEMPLATES: {

@@ -13,6 +13,8 @@ export interface Tip {
 	effort: Effort;
 	/** kWh saved per year. */
 	kwhSaved: number;
+	/** Catalog id of the appliance this tip is about, for its icon. */
+	specId: string | null;
 }
 
 interface Rule {
@@ -156,6 +158,7 @@ export function buildTips(items: ApplianceItem[]): Tip[] {
 			detail: rule.detail,
 			effort: rule.effort,
 			kwhSaved,
+			specId: matched[0].specId,
 		});
 	}
 
@@ -168,6 +171,7 @@ export function buildTips(items: ApplianceItem[]): Tip[] {
 				"Devices you aren't using still draw power. Switch them off at the wall, use a smart power strip, and turn off \"instant-on\" on consoles and TVs.",
 			effort: "Free",
 			kwhSaved: standby * 0.8,
+			specId: null,
 		});
 	}
 
