@@ -1,12 +1,15 @@
 import { computeResults, type ApplianceItem, type Settings } from "@/lib/calc";
 import { getRegion } from "@/lib/data/regions";
+import { itemName } from "@/lib/i18n";
+import type { Dict } from "@/lib/i18n/en";
 
 const cell = (v: string | number) => {
 	const s = String(v);
 	return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
-export function downloadCsv(items: ApplianceItem[], settings: Settings) {
+/** Column names stay in English so spreadsheets and scripts can rely on them. */
+export function downloadCsv(items: ApplianceItem[], settings: Settings, t: Dict) {
 	const region = getRegion(settings.regionId);
 	const { rows, totals } = computeResults(items, settings);
 	const header = [
@@ -26,7 +29,7 @@ export function downloadCsv(items: ApplianceItem[], settings: Settings) {
 	];
 	const lines = rows.map(({ item: it, kwh, cost, co2 }) =>
 		[
-			it.name || "Unnamed appliance",
+			itemName(t, it) || t.step2.unnamed,
 			it.mode === "hours" ? "hours" : "loads",
 			it.mode === "hours" ? it.watts : "",
 			it.mode === "hours" ? it.hoursPerDay : "",
@@ -43,7 +46,8 @@ export function downloadCsv(items: ApplianceItem[], settings: Settings) {
 			.map(cell)
 			.join(",")
 	);
-	const csv = [
+	// BOM so Excel opens Turkish and Arabic text correctly.
+	const csv = String.fromCharCode(0xfeff) + [
 		header.join(","),
 		...lines,
 		"",

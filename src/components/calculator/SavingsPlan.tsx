@@ -3,11 +3,12 @@
 import { Check, Clock, Leaf, PiggyBank, Plug, Sun, Target } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { applianceVisual } from "@/lib/data/appliances";
-import { formatMass, formatMoney, formatNumber } from "@/lib/calc";
+import { formatMass, formatMoney } from "@/lib/calc";
 import type { Effort } from "@/lib/tips";
 import { cn } from "@/lib/utils";
 import { IconTile } from "./ui";
 import { useResults } from "./useResults";
+import { fill, formatPercent, tipText, useLang, useT } from "@/lib/i18n";
 
 const EFFORT_STYLE: Record<Effort, string> = {
 	Free: "bg-emerald-100 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-300",
@@ -15,31 +16,16 @@ const EFFORT_STYLE: Record<Effort, string> = {
 	Investment: "bg-violet-100 text-violet-800 dark:bg-violet-400/15 dark:text-violet-300",
 };
 
-const BEYOND = [
-	{
-		icon: Leaf,
-		tone: "bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300",
-		title: "Switch to a renewable tariff",
-		detail:
-			"Choose a supplier or plan backed by wind and solar. It cuts the CO₂ from your electricity without changing how you live.",
-	},
-	{
-		icon: Sun,
-		tone: "bg-amber-100 text-amber-700 dark:bg-amber-400/15 dark:text-amber-300",
-		title: "Look into solar",
-		detail:
-			"If you own your roof, panels can cover much of your daytime use. Renters can often join a community solar scheme.",
-	},
-	{
-		icon: Clock,
-		tone: "bg-sky-100 text-sky-700 dark:bg-sky-400/15 dark:text-sky-300",
-		title: "Use power when it's cheap",
-		detail:
-			"If your tariff has cheaper night or weekend rates, run the dishwasher, laundry and car charging then.",
-	},
+/** Icons for `save.beyond` in the dictionary, in the same order. */
+const BEYOND_STYLE = [
+	{ icon: Leaf, tone: "bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300" },
+	{ icon: Sun, tone: "bg-amber-100 text-amber-700 dark:bg-amber-400/15 dark:text-amber-300" },
+	{ icon: Clock, tone: "bg-sky-100 text-sky-700 dark:bg-sky-400/15 dark:text-sky-300" },
 ];
 
 export function SavingsPlan() {
+	const t = useT();
+	const lang = useLang();
 	const { tips, plan, totals, region, rows } = useResults();
 	const planIds = useAppStore((s) => s.plan);
 	const togglePlan = useAppStore((s) => s.togglePlan);
@@ -55,56 +41,53 @@ export function SavingsPlan() {
 				<div className="flex flex-col items-center gap-4 rounded-3xl border-2 border-dashed p-10 text-center">
 					<IconTile icon={PiggyBank} tone="bg-primary/10 text-primary" size="lg" />
 					<p className="max-w-md text-lg text-muted-foreground">
-						Add your appliances above and we&apos;ll show the changes that save
-						you the most.
+						{t.save.empty}
 					</p>
 				</div>
 			) : tips.length === 0 ? (
 				<div className="rounded-3xl border bg-card p-6 text-lg text-muted-foreground">
-					Nice, there are no obvious quick wins in your list. The ideas below can
-					take you further.
+					{t.save.noTips}
 				</div>
 			) : (
 				<>
 					<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
 						<PlanStat
 							icon={Target}
-							label="You could save up to"
+							label={t.save.couldSave}
 							value={money(potentialCost)}
-							sub={`a year · ${formatNumber((potentialKwh / Math.max(totals.kwh, 1e-9)) * 100, loc, 0)}% of your use`}
+							sub={fill(t.save.couldSaveSub, {
+								pct: formatPercent(lang, potentialKwh / Math.max(totals.kwh, 1e-9)),
+							})}
 						/>
 						<PlanStat
 							icon={PiggyBank}
-							label="Your plan saves"
+							label={t.save.planSaves}
 							value={money(plan.cost)}
-							sub={
-								planIds.length === 0
-									? "Tick the changes below"
-									: `a year · ${planIds.length} ${planIds.length === 1 ? "change" : "changes"}`
-							}
+							sub={planIds.length === 0 ? t.save.planHint : t.save.planCount(planIds.length)}
 							highlight
 						/>
 						<PlanStat
 							icon={Leaf}
-							label="Carbon you avoid"
+							label={t.save.avoided}
 							value={formatMass(plan.co2, loc)}
-							sub="CO₂e a year"
+							sub={t.save.avoidedSub}
 						/>
 					</div>
 
 					<ul className="flex flex-col gap-3">
-						{tips.map((t) => {
-							const on = planIds.includes(t.id);
-							const v = t.specId ? applianceVisual(t.specId) : null;
+						{tips.map((tip) => {
+							const on = planIds.includes(tip.id);
+							const v = tip.specId ? applianceVisual(tip.specId) : null;
+							const text = tipText(t, tip.id);
 							return (
-								<li key={t.id}>
+								<li key={tip.id}>
 									<button
 										type="button"
 										role="checkbox"
 										aria-checked={on}
-										onClick={() => togglePlan(t.id)}
+										onClick={() => togglePlan(tip.id)}
 										className={cn(
-											"flex w-full flex-col gap-4 rounded-3xl border-2 bg-card p-5 text-left shadow-sm transition-colors sm:flex-row sm:items-center",
+											"flex w-full flex-col gap-4 rounded-3xl border-2 bg-card p-5 text-start shadow-sm transition-colors sm:flex-row sm:items-center",
 											on ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
 										)}>
 										<span className="flex items-start gap-4 sm:flex-1 sm:items-center">
@@ -115,28 +98,28 @@ export function SavingsPlan() {
 											<span className="min-w-0 flex-1">
 												<span className="flex flex-wrap items-center gap-2">
 													<span className="text-lg font-semibold leading-snug">
-														{t.title}
+														{text.title}
 													</span>
 													<span
 														className={cn(
 															"rounded-full px-2.5 py-0.5 text-xs font-semibold",
-															EFFORT_STYLE[t.effort]
+															EFFORT_STYLE[tip.effort]
 														)}>
-														{t.effort}
+														{t.save.effort[tip.effort]}
 													</span>
 												</span>
 												<span className="mt-1 block text-base text-muted-foreground">
-													{t.detail}
+													{text.detail}
 												</span>
 											</span>
 										</span>
 										<span className="flex items-center justify-between gap-4 border-t pt-4 sm:border-0 sm:pt-0">
-											<span className="sm:text-right">
+											<span className="sm:text-end">
 												<span className="block text-2xl font-bold tabular-nums text-emerald-700 dark:text-emerald-400">
-													{money(t.costSaved)}
+													{money(tip.costSaved)}
 												</span>
 												<span className="block text-sm text-muted-foreground">
-													a year · {formatMass(t.co2Saved, loc)} CO₂e
+													{t.save.perYear} · {formatMass(tip.co2Saved, loc)} CO₂e
 												</span>
 											</span>
 											<span
@@ -154,7 +137,7 @@ export function SavingsPlan() {
 													)}>
 													{on && <Check className="size-3.5" strokeWidth={3.5} />}
 												</span>
-												{on ? "In my plan" : "I'll do this"}
+												{on ? t.save.inPlan : t.save.willDo}
 											</span>
 										</span>
 									</button>
@@ -166,11 +149,11 @@ export function SavingsPlan() {
 			)}
 
 			<div>
-				<h3 className="text-xl font-bold">Going further</h3>
+				<h3 className="text-xl font-bold">{t.save.further}</h3>
 				<ul className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-					{BEYOND.map((b) => (
+					{t.save.beyond.map((b, i) => (
 						<li key={b.title} className="rounded-3xl border bg-card p-6 shadow-sm">
-							<IconTile icon={b.icon} tone={b.tone} />
+							<IconTile icon={BEYOND_STYLE[i].icon} tone={BEYOND_STYLE[i].tone} />
 							<div className="mt-4 text-lg font-semibold">{b.title}</div>
 							<p className="mt-1 text-base text-muted-foreground">{b.detail}</p>
 						</li>

@@ -6,7 +6,7 @@
 @theme inline {
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
-	--font-sans: var(--font-geist-sans);
+	--font-sans: var(--font-geist-sans), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
 	--font-mono: var(--font-geist-mono);
 	--color-ring: var(--ring);
 	--color-input: var(--input);
@@ -83,6 +83,9 @@
 	}
 	html {
 		scroll-behavior: smooth;
+	}
+	html:lang(ar) body {
+		font-family: var(--font-arabic), var(--font-geist-sans), sans-serif;
 	}
 	@media (prefers-reduced-motion: reduce) {
 		html {

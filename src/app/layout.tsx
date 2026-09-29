@@ -1,13 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, IBM_Plex_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import NavBar from "@/components/ui/navBar";
 import { Analytics } from "@vercel/analytics/next";
+import { LANG_BOOT_SCRIPT } from "@/lib/i18n/boot";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
 	subsets: ["latin"],
+});
+
+// Geist has no Arabic glyphs; the browser falls back to this for Arabic text.
+const plexArabic = IBM_Plex_Sans_Arabic({
+	variable: "--font-arabic",
+	subsets: ["arabic"],
+	weight: ["400", "500", "600", "700"],
 });
 
 const geistMono = Geist_Mono({
@@ -77,8 +85,11 @@ export default function RootLayout({
 }) {
 	return (
 		<html lang="en" suppressHydrationWarning={true}>
+			<head>
+				<script dangerouslySetInnerHTML={{ __html: LANG_BOOT_SCRIPT }} />
+			</head>
 			<body
-				className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+				className={`${geistSans.variable} ${plexArabic.variable} ${geistMono.variable} antialiased`}>
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 					<Analytics />
 					<NavBar />

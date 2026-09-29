@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 export default function ThemeToggle() {
 	const { resolvedTheme, setTheme } = useTheme();
+	const t = useT();
 	const [mounted, setMounted] = useState(false);
 	useEffect(() => setMounted(true), []);
 
@@ -15,7 +17,7 @@ export default function ThemeToggle() {
 		<button
 			type="button"
 			onClick={() => setTheme(dark ? "light" : "dark")}
-			aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+			aria-label={dark ? t.nav.toLight : t.nav.toDark}
 			className="flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
 			{mounted ? (
 				dark ? <Sun className="size-5" aria-hidden /> : <Moon className="size-5" aria-hidden />

@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { fill, useT } from "@/lib/i18n";
 
 // --- Icon tile -------------------------------------------------------------
 
@@ -64,7 +65,6 @@ export function StepHeader({
 				</span>
 				<div>
 					<h2 id={id} className="text-xl font-bold tracking-tight sm:text-2xl">
-						<span className="sr-only">Step {step}: </span>
 						{title}
 					</h2>
 					{text && <p className="mt-0.5 text-base text-muted-foreground">{text}</p>}
@@ -158,6 +158,7 @@ export function Stepper({
 	className,
 }: NumberProps) {
 	const id = useId();
+	const t = useT();
 	const { text, setExact, inputProps } = useNumericText(value, onChange, min, max);
 	// Snap to the step grid so 4.3 + 0.5 lands on 4.5, not 4.8.
 	const bump = (dir: 1 | -1) => {
@@ -175,7 +176,7 @@ export function Stepper({
 			</label>
 			<div className="flex h-12 items-stretch overflow-hidden rounded-xl border border-input bg-card focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/30">
 				<StepButton
-					label={`Less ${label.toLowerCase()}`}
+					label={fill(t.row.less, { label })}
 					disabled={value <= min}
 					onClick={() => bump(-1)}>
 					<Minus className="size-5" strokeWidth={2.5} />
@@ -198,7 +199,7 @@ export function Stepper({
 					)}
 				</div>
 				<StepButton
-					label={`More ${label.toLowerCase()}`}
+					label={fill(t.row.moreOf, { label })}
 					disabled={value >= max}
 					onClick={() => bump(1)}>
 					<Plus className="size-5" strokeWidth={2.5} />
@@ -249,11 +250,11 @@ export function NumberField({
 					className={cn(
 						"h-12 w-full rounded-xl border border-input bg-card px-4 text-lg font-semibold tabular-nums outline-none transition-[box-shadow]",
 						"focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30",
-						unit && "pr-20"
+						unit && "pe-20"
 					)}
 				/>
 				{unit && (
-					<span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+					<span className="pointer-events-none absolute end-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
 						{unit}
 					</span>
 				)}

@@ -41,15 +41,3 @@ export function useResults() {
 		};
 	}, [items, settings, period, plan]);
 }
-
-export const PERIOD_WORD = {
-	day: "day",
-	month: "month",
-	year: "year",
-} as const;
-
-export const PERIOD_LABEL = {
-	day: "per day",
-	month: "per month",
-	year: "per year",
-} as const;

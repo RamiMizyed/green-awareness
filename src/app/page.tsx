@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useT } from "@/lib/i18n";
 
 const Calculator = dynamic(() => import("@/components/calculator/Calculator"), {
 	ssr: false,
@@ -16,14 +17,14 @@ const Calculator = dynamic(() => import("@/components/calculator/Calculator"), {
 });
 
 export default function Home() {
+	const t = useT();
 	return (
 		<>
 			<Calculator />
 			<footer className="border-t pb-28 pt-10 text-base text-muted-foreground lg:pb-10">
 				<div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
 					<p>
-						&copy; {new Date().getFullYear()} Green Awareness. Estimates only;
-						check your bill for exact figures.
+						&copy; {new Date().getFullYear()} Green Awareness. {t.footer.note}
 					</p>
 					<div className="flex gap-5">
 						<a
@@ -31,14 +32,14 @@ export default function Home() {
 							target="_blank"
 							rel="noopener noreferrer"
 							className="hover:text-foreground">
-							Contribute on GitHub
+							{t.footer.contribute}
 						</a>
 						<a
 							href="https://ramimizyed.dev/"
 							target="_blank"
 							rel="noopener noreferrer"
 							className="hover:text-foreground">
-							Made by Rami Mizyed
+							{t.footer.madeBy}
 						</a>
 					</div>
 				</div>

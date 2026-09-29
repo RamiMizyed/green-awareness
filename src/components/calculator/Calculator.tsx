@@ -12,19 +12,18 @@ import { Methodology } from "./Methodology";
 import { RegionSettings } from "./RegionSettings";
 import { ResultsPanel } from "./ResultsPanel";
 import { SavingsPlan } from "./SavingsPlan";
-import { PERIOD_WORD, useResults } from "./useResults";
+import { useResults } from "./useResults";
+import { useT } from "@/lib/i18n";
 
-const POINTS = [
-	{ icon: Clock, text: "About 2 minutes" },
-	{ icon: Globe2, text: "29 countries" },
-	{ icon: Lock, text: "Private, stays on your device" },
-];
+/** Icons for `intro.points` in the dictionary, in the same order. */
+const POINT_ICONS = [Clock, Globe2, Lock];
 
 /**
  * Client-only (loaded with ssr: false) because the store reads localStorage
  * synchronously when it's created.
  */
 export default function Calculator() {
+	const t = useT();
 	const guessRegion = useAppStore((s) => s.guessRegion);
 	const items = useAppStore((s) => s.items);
 	const settings = useAppStore((s) => s.settings);
@@ -38,25 +37,28 @@ export default function Calculator() {
 					<header className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
 						<div className="max-w-3xl">
 							<h1 className="text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-								What does your electricity cost you, and the planet?
+								{t.intro.title}
 							</h1>
 							<ul className="mt-5 flex flex-wrap gap-2">
-								{POINTS.map(({ icon: Icon, text }) => (
+								{t.intro.points.map((text, i) => {
+									const Icon = POINT_ICONS[i];
+									return (
 									<li
 										key={text}
 										className="inline-flex items-center gap-2 rounded-full border bg-card px-3.5 py-1.5 text-sm font-medium">
 										<Icon className="size-4 text-primary" aria-hidden />
 										{text}
 									</li>
-								))}
+									);
+								})}
 							</ul>
 						</div>
 						{items.length > 0 && (
 							<Button
 								variant="outline"
 								className="self-start bg-card lg:self-auto"
-								onClick={() => downloadCsv(items, settings)}>
-								<Download aria-hidden /> Download my results
+								onClick={() => downloadCsv(items, settings, t)}>
+								<Download aria-hidden /> {t.intro.download}
 							</Button>
 						)}
 					</header>
@@ -82,8 +84,8 @@ export default function Calculator() {
 			<section id="save" className="scroll-mt-16 border-t bg-card/40 py-16 sm:py-20">
 				<div className="mx-auto max-w-7xl px-4 sm:px-6">
 					<SectionTitle
-						title="Your savings plan"
-						text="The changes that make the biggest difference in your home. Tick the ones you'll do and watch your savings add up."
+						title={t.save.title}
+						text={t.save.text}
 					/>
 					<div className="mt-8">
 						<SavingsPlan />
@@ -94,8 +96,8 @@ export default function Calculator() {
 			<section id="how-it-works" className="scroll-mt-16 border-t py-16 sm:py-20">
 				<div className="mx-auto max-w-7xl px-4 sm:px-6">
 					<SectionTitle
-						title="How it works"
-						text="The maths, where the data comes from, and what the numbers can and can't tell you."
+						title={t.how.title}
+						text={t.how.text}
 					/>
 					<div className="mt-8">
 						<Methodology />
@@ -119,6 +121,7 @@ function SectionTitle({ title, text }: { title: string; text: string }) {
 
 /** Phones: keeps the running total in view while editing the list. */
 function MobileSummaryBar() {
+	const t = useT();
 	const { totals, region, divisor, period, rows } = useResults();
 	if (rows.length === 0) return null;
 	return (
@@ -129,7 +132,7 @@ function MobileSummaryBar() {
 						{formatMoney(totals.cost / divisor, region.currency, region.locale)}
 						<span className="text-sm font-medium text-muted-foreground">
 							{" "}
-							a {PERIOD_WORD[period]}
+							{t.period.per[period]}
 						</span>
 					</div>
 					<div className="text-sm text-muted-foreground">
@@ -138,7 +141,7 @@ function MobileSummaryBar() {
 				</div>
 				<Button asChild>
 					<a href="#results">
-						<ChevronUp aria-hidden /> Results
+						<ChevronUp aria-hidden /> {t.results.mobileButton}
 					</a>
 				</Button>
 			</div>

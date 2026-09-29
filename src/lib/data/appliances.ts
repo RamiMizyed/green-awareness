@@ -492,9 +492,7 @@ const BY_ID = new Map(APPLIANCES.map((a) => [a.id, a]));
 
 export const getSpec = (id: string) => BY_ID.get(id);
 
-const CATEGORY_LABEL = new Map(CATEGORIES.map((c) => [c.id, c.label]));
-
-/** Icon, colour and category label for any list item, presets or custom. */
+/** Icon, colour and category for any list item, presets or custom. */
 export function applianceVisual(specId: string) {
 	const s = BY_ID.get(specId);
 	if (!s) {
@@ -503,7 +501,6 @@ export function applianceVisual(specId: string) {
 			tone: CUSTOM_TILE,
 			hex: "#71717a",
 			category: "other" as Category,
-			categoryLabel: "Custom",
 		};
 	}
 	const theme = CATEGORY_THEME[s.category];
@@ -512,7 +509,6 @@ export function applianceVisual(specId: string) {
 		tone: theme.tile,
 		hex: theme.hex,
 		category: s.category,
-		categoryLabel: CATEGORY_LABEL.get(s.category)!,
 	};
 }
 

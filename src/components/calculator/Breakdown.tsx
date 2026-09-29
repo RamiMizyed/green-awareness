@@ -3,11 +3,14 @@
 import { applianceVisual, CATEGORIES, CATEGORY_THEME, type Category } from "@/lib/data/appliances";
 import { formatMoney } from "@/lib/calc";
 import { IconTile } from "./ui";
-import { PERIOD_WORD, useResults } from "./useResults";
+import { useResults } from "./useResults";
+import { fill, formatPercent, itemName, rich, useLang, useT } from "@/lib/i18n";
 
 const TOP_N = 5;
 
 export function Breakdown() {
+	const t = useT();
+	const lang = useLang();
 	const { rows, totals, region, divisor, period } = useResults();
 	if (rows.length === 0 || totals.kwh <= 0) return null;
 
@@ -17,7 +20,7 @@ export function Breakdown() {
 		byCat.set(cat, (byCat.get(cat) ?? 0) + r.kwh);
 	}
 	const cats = CATEGORIES.filter((c) => (byCat.get(c.id) ?? 0) > 0)
-		.map((c) => ({ ...c, share: byCat.get(c.id)! / totals.kwh }))
+		.map((c) => ({ ...c, label: t.categories[c.id], share: byCat.get(c.id)! / totals.kwh }))
 		.sort((a, b) => b.share - a.share);
 
 	const top = rows.slice(0, TOP_N).filter((r) => r.kwh > 0);
@@ -28,7 +31,7 @@ export function Breakdown() {
 			aria-labelledby="breakdown-heading"
 			className="rounded-3xl border bg-card p-5 shadow-sm sm:p-7">
 			<h2 id="breakdown-heading" className="text-lg font-bold">
-				Where your money goes
+				{t.breakdown.heading}
 			</h2>
 
 			<div className="mt-4 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
@@ -36,11 +39,11 @@ export function Breakdown() {
 					<div
 						className="flex h-5 w-full gap-0.5 overflow-hidden rounded-full"
 						role="img"
-						aria-label={cats.map((c) => `${c.label} ${Math.round(c.share * 100)}%`).join(", ")}>
+						aria-label={cats.map((c) => `${c.label} ${formatPercent(lang, c.share)}`).join(", ")}>
 						{cats.map((c) => (
 							<div
 								key={c.id}
-								className="h-full first:rounded-l-full last:rounded-r-full"
+								className="h-full first:rounded-s-full last:rounded-e-full"
 								style={{ width: `${c.share * 100}%`, background: CATEGORY_THEME[c.id].hex }}
 							/>
 						))}
@@ -54,8 +57,8 @@ export function Breakdown() {
 									aria-hidden
 								/>
 								<span className="truncate">{c.label}</span>
-								<span className="ml-auto font-semibold tabular-nums">
-									{Math.round(c.share * 100)}%
+								<span className="ms-auto font-semibold tabular-nums">
+									{formatPercent(lang, c.share)}
 								</span>
 							</li>
 						))}
@@ -63,15 +66,15 @@ export function Breakdown() {
 
 					{top.length >= 3 && (
 						<p className="mt-5 rounded-2xl bg-muted/60 p-4 text-sm">
-							Your top 3 are{" "}
-							<strong className="text-base">{Math.round(topShare * 100)}%</strong> of your
-							bill. Changes there make the biggest difference.
+							{rich(t.breakdown.top3, {
+								pct: <strong className="text-base">{formatPercent(lang, topShare)}</strong>,
+							})}
 						</p>
 					)}
 				</div>
 				<div>
 					<h3 className="text-sm font-semibold text-muted-foreground">
-						Your biggest users
+						{t.breakdown.biggest}
 					</h3>
 					<ol className="mt-3 flex flex-col gap-4">
 						{top.map((r) => {
@@ -82,7 +85,7 @@ export function Breakdown() {
 									<div className="min-w-0 flex-1">
 										<div className="flex items-baseline justify-between gap-3">
 											<span className="truncate text-base font-medium">
-												{r.item.name || "Unnamed appliance"}
+												{itemName(t, r.item) || t.step2.unnamed}
 											</span>
 											<span className="shrink-0 font-semibold tabular-nums">
 												{formatMoney(r.cost / divisor, region.currency, region.locale)}
@@ -101,7 +104,7 @@ export function Breakdown() {
 					</ol>
 				</div>
 			</div>
-			<p className="sr-only">Amounts shown per {PERIOD_WORD[period]}.</p>
+			<p className="sr-only">{fill(t.breakdown.shownPer, { period: t.period.inSentence[period] })}</p>
 		</section>
 	);
 }
