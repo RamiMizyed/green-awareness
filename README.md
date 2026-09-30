@@ -4,7 +4,7 @@
 
 Green Awareness is a free household energy and carbon calculator. People add the appliances in their home, pick their country, and instantly see their electricity cost, energy use and CO₂ footprint, followed by a personal plan of the changes that would save them the most.
 
-**Live site:** [greenawareness.vercel.app](https://greenawareness.vercel.app)
+**Live site:** [greenawareness.org](https://www.greenawareness.org)
 
 ## Features
 

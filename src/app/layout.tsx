@@ -24,7 +24,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-	metadataBase: new URL("https://green-awareness.org"), // <-- replace with your domain
+	metadataBase: new URL("https://www.greenawareness.org"),
 	title: "Green Awareness | Home Energy & Carbon Footprint Calculator",
 	description:
 		"Find out what your home appliances cost you and how much CO₂ they're responsible for, with local prices and grid data for over 140 countries. Get a personal plan to cut your bill and your footprint.",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
 		"clean energy",
 	],
 	authors: [
-		{ name: "Green Awareness Team", url: "https://green-awareness.org" },
+		{ name: "Green Awareness Team", url: "https://www.greenawareness.org" },
 	],
 	creator: "Rami Mizyed",
 	publisher: "Green Awareness",
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
 		title: "Green Awareness | Home Energy & Carbon Footprint Calculator",
 		description:
 			"See where your electricity goes, what it costs, and the changes that save you the most money and CO₂.",
-		url: "https://green-awareness.org",
+		url: "https://www.greenawareness.org",
 		siteName: "Green Awareness",
 		locale: "en_US",
 		type: "website",
