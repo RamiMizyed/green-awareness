@@ -14,9 +14,12 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { NumberField, StepHeader } from "./ui";
+import { Flag } from "./Flag";
+import { intensityColor, WorldMap } from "./WorldMap";
 
 /** Averages first, then countries in alphabetical order for this language. */
 const PINNED = ["world", "eu"];
+const COUNTRIES = REGIONS.filter((r) => !PINNED.includes(r.id));
 
 export function RegionSettings() {
 	const t = useT();
@@ -41,12 +44,18 @@ export function RegionSettings() {
 	}, [t, lang]);
 
 	const currentName = regionName(t, lang, region.id, region.name);
+	// How many listed countries have a dirtier grid than the one in use.
+	const cleanerThan = COUNTRIES.filter((r) => r.intensity > settings.intensity).length;
 
 	return (
 		<section
 			aria-labelledby="region-heading"
 			className="rounded-3xl border bg-card p-5 shadow-sm sm:p-7">
-			<StepHeader id="region-heading" step={1} title={t.step1.title} text={t.step1.text} />
+			<StepHeader id="region-heading" step={1} title={t.step1.title} text={t.map.hint} />
+
+			<div className="mt-6">
+				<WorldMap selectedId={region.id} onSelect={setRegion} />
+			</div>
 
 			<div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-[1.3fr_1fr_1fr]">
 				<div className="flex min-w-0 flex-col gap-1.5 sm:col-span-2 xl:col-span-1">
@@ -55,12 +64,20 @@ export function RegionSettings() {
 						<SelectTrigger
 							className="!h-12 w-full rounded-xl bg-card px-4 text-lg font-semibold"
 							aria-label={t.step1.country}>
-							<SelectValue>{currentName}</SelectValue>
+							<SelectValue>
+								<span className="flex items-center gap-2.5">
+									<Flag regionId={region.id} className="text-xl" />
+									<span className="truncate">{currentName}</span>
+								</span>
+							</SelectValue>
 						</SelectTrigger>
 						<SelectContent className="max-h-96">
 							{options.map((r) => (
 								<SelectItem key={r.id} value={r.id} className="py-2.5 text-base">
-									{r.name}
+									<span className="flex items-center gap-2.5">
+										<Flag regionId={r.id} className="text-lg" />
+										{r.name}
+									</span>
 								</SelectItem>
 							))}
 						</SelectContent>
@@ -82,7 +99,18 @@ export function RegionSettings() {
 				/>
 			</div>
 
-			<div className="mt-4 flex flex-wrap items-start justify-between gap-3">
+			{cleanerThan > 0 && (
+				<p className="mt-4 flex items-center gap-2 text-sm font-medium">
+					<span
+						className="size-3 shrink-0 rounded-full"
+						style={{ background: intensityColor(settings.intensity) }}
+						aria-hidden
+					/>
+					{fill(t.map.rank, { n: cleanerThan, total: COUNTRIES.length })}
+				</p>
+			)}
+
+			<div className="mt-3 flex flex-wrap items-start justify-between gap-3">
 				<p className="flex max-w-xl gap-2 text-sm text-muted-foreground">
 					<Info className="mt-0.5 size-4 shrink-0" aria-hidden />
 					{t.step1.tip}

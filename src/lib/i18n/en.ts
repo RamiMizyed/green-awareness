@@ -26,7 +26,7 @@ const en = {
 
 	intro: {
 		title: "What does your electricity cost you, and the planet?",
-		points: ["About 2 minutes", "29 countries", "Private, stays on your device"],
+		points: ["About 2 minutes", "29 countries", "Your list stays on your device"],
 		download: "Download my results",
 	},
 
@@ -56,6 +56,42 @@ const en = {
 		useDefaults: "Use {name} defaults",
 		world: "World average",
 		eu: "European Union average",
+	},
+
+	map: {
+		hint: "Tap your country on the map, or pick it from the list.",
+		mapLabel: "World map of how much CO₂ each country's electricity produces",
+		cleaner: "Cleaner grid",
+		dirtier: "More CO₂",
+		price: "Electricity price",
+		co2: "CO₂ per kWh",
+		perKwh: "per kWh",
+		rank: "Cleaner than {n} of the {total} countries listed",
+	},
+
+	assistant: {
+		title: "Just tell us what you have",
+		text: "Type your appliances in your own words and we'll add them for you.",
+		label: "Describe your appliances",
+		placeholder: "e.g. LG TV, washing machine, 2 fridges",
+		send: "Add",
+		examples: [
+			"TV, fridge and washing machine",
+			"2 air conditioners and a gaming PC",
+			"Electric car, heat pump, dishwasher",
+		],
+		thinking: "Working it out…",
+		added: (n: number) => `Added ${n} ${n === 1 ? "appliance" : "appliances"}`,
+		undo: "Undo",
+		undone: "Removed them again.",
+		nothing: "I couldn't spot any appliances there. Try something like “fridge, TV, 2 fans”.",
+		offline: "Our AI helper is offline right now, so I matched what I could myself.",
+		limit: "You've sent a lot of messages. Please wait a few minutes and try again.",
+		error: "Something went wrong. Please try again.",
+		privacy: "What you type here is sent to our AI helper (Claude, by Anthropic) so it can understand it. Your list itself stays on your device.",
+		you: "You",
+		ai: "Helper",
+		manual: "Or add them yourself",
 	},
 
 	step2: {
@@ -293,7 +329,7 @@ const en = {
 			},
 			{
 				q: "Is my data stored anywhere?",
-				a: "No. Everything stays in your browser's local storage on this device. Nothing is sent to a server, and you can clear it at any time.",
+				a: "Your appliance list stays in your browser's local storage on this device and is never uploaded. If you use the AI helper, only the words you type there are sent to Claude (by Anthropic) to work out which appliances you mean. You can clear your list at any time.",
 			},
 		],
 	},

@@ -19,6 +19,9 @@ interface AppState {
 interface AppActions {
 	addPreset: (specId: string) => void;
 	addCustom: (name?: string) => void;
+	/** Adds several items at once and returns their ids (used by the helper). */
+	addItems: (items: Omit<ApplianceItem, "id">[]) => string[];
+	removeItems: (ids: string[]) => void;
 	updateItem: (id: string, patch: Partial<Omit<ApplianceItem, "id">>) => void;
 	removeItem: (id: string) => void;
 	undoRemove: () => void;
@@ -100,6 +103,15 @@ export const useAppStore = create<AppState & AppActions>()(
 						},
 					],
 				})),
+
+			addItems: (newItems) => {
+				const withIds = newItems.map((it) => ({ ...it, id: newId() }));
+				set((s) => ({ items: [...s.items, ...withIds] }));
+				return withIds.map((it) => it.id);
+			},
+
+			removeItems: (ids) =>
+				set((s) => ({ items: s.items.filter((it) => !ids.includes(it.id)) })),
 
 			updateItem: (id, patch) =>
 				set((s) => ({

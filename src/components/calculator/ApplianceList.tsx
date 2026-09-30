@@ -19,6 +19,7 @@ import {
 import { AppliancePicker } from "./AppliancePicker";
 import { ApplianceRow } from "./ApplianceRow";
 import { IconTile, StepHeader } from "./ui";
+import { AssistantPanel } from "./AssistantPanel";
 import { useResults } from "./useResults";
 import { fill, itemName, templateText, useT } from "@/lib/i18n";
 
@@ -57,6 +58,9 @@ export function ApplianceList() {
 						)
 					}
 				/>
+				<div className="mt-6">
+					<AssistantPanel />
+				</div>
 				{rows.length === 0 && <EmptyState />}
 			</div>
 
@@ -99,6 +103,11 @@ function EmptyState() {
 	const loadTemplate = useAppStore((s) => s.loadTemplate);
 	return (
 		<div className="mt-6">
+			<div className="mb-4 flex items-center gap-3 text-sm font-medium text-muted-foreground">
+				<span className="h-px flex-1 bg-border" aria-hidden />
+				{t.assistant.manual}
+				<span className="h-px flex-1 bg-border" aria-hidden />
+			</div>
 			<ul className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
 				{TEMPLATES.map((tpl) => {
 					const Icon = TEMPLATE_ICON[tpl.id as keyof typeof TEMPLATE_ICON] ?? Home;

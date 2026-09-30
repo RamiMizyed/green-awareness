@@ -22,7 +22,7 @@ const tr: Dict = {
 
 	intro: {
 		title: "Elektriğiniz size ve gezegene kaça mal oluyor?",
-		points: ["Yaklaşık 2 dakika", "29 ülke", "Gizli, verileriniz cihazınızda kalır"],
+		points: ["Yaklaşık 2 dakika", "29 ülke", "Listeniz cihazınızda kalır"],
 		download: "Sonuçlarımı indir",
 	},
 
@@ -50,6 +50,42 @@ const tr: Dict = {
 		useDefaults: "{name} varsayılanlarını kullan",
 		world: "Dünya ortalaması",
 		eu: "Avrupa Birliği ortalaması",
+	},
+
+	map: {
+		hint: "Haritada ülkenize dokunun veya listeden seçin.",
+		mapLabel: "Her ülkenin elektriğinin ne kadar CO₂ ürettiğini gösteren dünya haritası",
+		cleaner: "Daha temiz şebeke",
+		dirtier: "Daha fazla CO₂",
+		price: "Elektrik fiyatı",
+		co2: "kWh başına CO₂",
+		perKwh: "kWh başına",
+		rank: "Listedeki {total} ülkenin {n} tanesinden daha temiz",
+	},
+
+	assistant: {
+		title: "Neleriniz olduğunu yazmanız yeterli",
+		text: "Cihazlarınızı kendi kelimelerinizle yazın, biz sizin için ekleyelim.",
+		label: "Cihazlarınızı anlatın",
+		placeholder: "ör. LG televizyon, çamaşır makinesi, 2 buzdolabı",
+		send: "Ekle",
+		examples: [
+			"Televizyon, buzdolabı ve çamaşır makinesi",
+			"2 klima ve bir oyun bilgisayarı",
+			"Elektrikli araç, ısı pompası, bulaşık makinesi",
+		],
+		thinking: "Düşünüyorum…",
+		added: (n) => `${n} cihaz eklendi`,
+		undo: "Geri al",
+		undone: "Geri alındı.",
+		nothing: "Mesajınızda bir cihaz göremedim. “buzdolabı, TV, 2 vantilatör” gibi bir şey deneyin.",
+		offline: "Yapay zekâ yardımcımız şu anda çevrimdışı, bu yüzden bulabildiklerimi kendim eşleştirdim.",
+		limit: "Çok sayıda mesaj gönderdiniz. Lütfen birkaç dakika bekleyip tekrar deneyin.",
+		error: "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
+		privacy: "Buraya yazdıklarınız, anlaşılabilmesi için yapay zekâ yardımcımıza (Anthropic'in Claude'u) gönderilir. Listenizin kendisi cihazınızda kalır.",
+		you: "Siz",
+		ai: "Yardımcı",
+		manual: "Ya da kendiniz ekleyin",
 	},
 
 	step2: {
@@ -287,7 +323,7 @@ const tr: Dict = {
 			},
 			{
 				q: "Verilerim bir yerde saklanıyor mu?",
-				a: "Hayır. Her şey bu cihazdaki tarayıcınızın yerel depolamasında kalır. Hiçbir şey sunucuya gönderilmez ve istediğiniz zaman silebilirsiniz.",
+				a: "Cihaz listeniz bu cihazdaki tarayıcınızın yerel depolamasında kalır ve hiçbir yere yüklenmez. Yapay zekâ yardımcısını kullanırsanız, yalnızca oraya yazdığınız kelimeler hangi cihazları kastettiğinizi anlamak için Claude'a (Anthropic) gönderilir. Listenizi istediğiniz zaman silebilirsiniz.",
 			},
 		],
 	},
