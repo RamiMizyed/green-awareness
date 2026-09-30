@@ -87,6 +87,19 @@ const ar: Dict = {
 		co2: "CO₂ لكل كيلوواط ساعة",
 		perKwh: "لكل كيلوواط ساعة",
 		rank: "أنظف من {n} من أصل {total} دولة مدرجة",
+		zoomIn: "تكبير",
+		zoomOut: "تصغير",
+		reset: "عرض العالم كله",
+		myCountry: "بلدي",
+		gestures: "اسحب للتحريك. للتكبير: قرّب إصبعيك أو انقر مرتين أو استخدم Ctrl مع التمرير.",
+		areas: {
+			europe: "أوروبا",
+			middleEast: "الشرق الأوسط",
+			asia: "آسيا",
+			africa: "أفريقيا",
+			americas: "الأمريكتان",
+			oceania: "أوقيانوسيا",
+		},
 	},
 
 	assistant: {

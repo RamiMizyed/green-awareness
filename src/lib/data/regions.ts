@@ -16,8 +16,8 @@ export interface Region {
 	intensity: number;
 	price: number;
 	distance: "km" | "mi";
-	/** ISO 3166 numeric code, as used by the world map data. Missing for
-	 *  places too small to draw at the map's scale. */
+	/** ISO 3166 numeric code, as used by the world map data. Some small
+	 *  countries only appear on the detailed map shown when zoomed in. */
 	iso?: string;
 }
 
@@ -30,29 +30,29 @@ export const REGIONS: Region[] = [
 	{ id: "ao", name: "Angola", currency: "AOA", locale: "pt-AO", intensity: 0.185, price: 15, distance: "km", iso: "024" },
 	{ id: "ar", name: "Argentina", currency: "ARS", locale: "es-AR", intensity: 0.346, price: 135, distance: "km", iso: "032" },
 	{ id: "am", name: "Armenia", currency: "AMD", locale: "hy-AM", intensity: 0.212, price: 41, distance: "km", iso: "051" },
-	{ id: "aw", name: "Aruba", currency: "AWG", locale: "nl-AW", intensity: 0.55, price: 0.378, distance: "km" },
+	{ id: "aw", name: "Aruba", currency: "AWG", locale: "nl-AW", intensity: 0.55, price: 0.378, distance: "km", iso: "533" },
 	{ id: "au", name: "Australia", currency: "AUD", locale: "en-AU", intensity: 0.525, price: 0.371, distance: "km", iso: "036" },
 	{ id: "at", name: "Austria", currency: "EUR", locale: "de-AT", intensity: 0.117, price: 0.311, distance: "km", iso: "040" },
 	{ id: "az", name: "Azerbaijan", currency: "AZN", locale: "az-AZ", intensity: 0.632, price: 0.082, distance: "km", iso: "031" },
 	{ id: "bs", name: "Bahamas", currency: "BSD", locale: "en-BS", intensity: 0.653, price: 0.348, distance: "km", iso: "044" },
-	{ id: "bh", name: "Bahrain", currency: "BHD", locale: "en-BH", intensity: 0.902, price: 0.018, distance: "km" },
+	{ id: "bh", name: "Bahrain", currency: "BHD", locale: "en-BH", intensity: 0.902, price: 0.018, distance: "km", iso: "048" },
 	{ id: "bd", name: "Bangladesh", currency: "BDT", locale: "en-BD", intensity: 0.696, price: 7.75, distance: "km", iso: "050" },
-	{ id: "bb", name: "Barbados", currency: "BBD", locale: "en-BB", intensity: 0.595, price: 0.628, distance: "km" },
+	{ id: "bb", name: "Barbados", currency: "BBD", locale: "en-BB", intensity: 0.595, price: 0.628, distance: "km", iso: "052" },
 	{ id: "by", name: "Belarus", currency: "BYN", locale: "be-BY", intensity: 0.309, price: 0.262, distance: "km", iso: "112" },
 	{ id: "be", name: "Belgium", currency: "EUR", locale: "nl-BE", intensity: 0.15, price: 0.358, distance: "km", iso: "056" },
 	{ id: "bz", name: "Belize", currency: "BZD", locale: "en-BZ", intensity: 0.17, price: 0.438, distance: "km", iso: "084" },
-	{ id: "bm", name: "Bermuda", currency: "BMD", locale: "en-BM", intensity: 0.639, price: 0.465, distance: "km" },
+	{ id: "bm", name: "Bermuda", currency: "BMD", locale: "en-BM", intensity: 0.639, price: 0.465, distance: "km", iso: "060" },
 	{ id: "bt", name: "Bhutan", currency: "BTN", locale: "en-BT", intensity: 0.024, price: 1.44, distance: "km", iso: "064" },
 	{ id: "ba", name: "Bosnia and Herzegovina", currency: "BAM", locale: "bs-BA", intensity: 0.571, price: 0.186, distance: "km", iso: "070" },
 	{ id: "bw", name: "Botswana", currency: "BWP", locale: "en-BW", intensity: 0.851, price: 1.32, distance: "km", iso: "072" },
 	{ id: "br", name: "Brazil", currency: "BRL", locale: "pt-BR", intensity: 0.11, price: 0.856, distance: "km", iso: "076" },
 	{ id: "bg", name: "Bulgaria", currency: "EUR", locale: "bg-BG", intensity: 0.276, price: 0.137, distance: "km", iso: "100" },
 	{ id: "bf", name: "Burkina Faso", currency: "XOF", locale: "fr-BF", intensity: 0.562, price: 120, distance: "km", iso: "854" },
-	{ id: "cv", name: "Cabo Verde", currency: "CVE", locale: "pt-CV", intensity: 0.462, price: 32, distance: "km" },
+	{ id: "cv", name: "Cabo Verde", currency: "CVE", locale: "pt-CV", intensity: 0.462, price: 32, distance: "km", iso: "132" },
 	{ id: "kh", name: "Cambodia", currency: "KHR", locale: "km-KH", intensity: 0.499, price: 605, distance: "km", iso: "116" },
 	{ id: "cm", name: "Cameroon", currency: "XAF", locale: "en-CM", intensity: 0.226, price: 48.5, distance: "km", iso: "120" },
 	{ id: "ca", name: "Canada", currency: "CAD", locale: "en-CA", intensity: 0.191, price: 0.174, distance: "km", iso: "124" },
-	{ id: "ky", name: "Cayman Islands", currency: "KYD", locale: "en-KY", intensity: 0.634, price: 0.342, distance: "km" },
+	{ id: "ky", name: "Cayman Islands", currency: "KYD", locale: "en-KY", intensity: 0.634, price: 0.342, distance: "km", iso: "136" },
 	{ id: "cl", name: "Chile", currency: "CLP", locale: "es-CL", intensity: 0.289, price: 220, distance: "km", iso: "152" },
 	{ id: "cn", name: "China", currency: "CNY", locale: "zh-CN", intensity: 0.525, price: 0.511, distance: "km", iso: "156" },
 	{ id: "co", name: "Colombia", currency: "COP", locale: "es-CO", intensity: 0.187, price: 695, distance: "km", iso: "170" },
@@ -79,7 +79,7 @@ export const REGIONS: Region[] = [
 	{ id: "gr", name: "Greece", currency: "EUR", locale: "el-GR", intensity: 0.315, price: 0.224, distance: "km", iso: "300" },
 	{ id: "gt", name: "Guatemala", currency: "GTQ", locale: "es-GT", intensity: 0.301, price: 2.28, distance: "km", iso: "320" },
 	{ id: "hn", name: "Honduras", currency: "HNL", locale: "es-HN", intensity: 0.322, price: 6.2, distance: "km", iso: "340" },
-	{ id: "hk", name: "Hong Kong", currency: "HKD", locale: "zh-HK", intensity: 0.675, price: 1.44, distance: "km" },
+	{ id: "hk", name: "Hong Kong", currency: "HKD", locale: "zh-HK", intensity: 0.675, price: 1.44, distance: "km", iso: "344" },
 	{ id: "hu", name: "Hungary", currency: "HUF", locale: "hu-HU", intensity: 0.163, price: 36, distance: "km", iso: "348" },
 	{ id: "is", name: "Iceland", currency: "ISK", locale: "is-IS", intensity: 0.028, price: 21.5, distance: "km", iso: "352" },
 	{ id: "in", name: "India", currency: "INR", locale: "en-IN", intensity: 0.67, price: 7.4, distance: "km", iso: "356" },
@@ -104,10 +104,10 @@ export const REGIONS: Region[] = [
 	{ id: "mg", name: "Madagascar", currency: "MGA", locale: "fr-MG", intensity: 0.432, price: 570, distance: "km", iso: "450" },
 	{ id: "mw", name: "Malawi", currency: "MWK", locale: "en-MW", intensity: 0.055, price: 155, distance: "km", iso: "454" },
 	{ id: "my", name: "Malaysia", currency: "MYR", locale: "ms-MY", intensity: 0.602, price: 0.204, distance: "km", iso: "458" },
-	{ id: "mv", name: "Maldives", currency: "MVR", locale: "dv-MV", intensity: 0.612, price: 1.61, distance: "km" },
+	{ id: "mv", name: "Maldives", currency: "MVR", locale: "dv-MV", intensity: 0.612, price: 1.61, distance: "km", iso: "462" },
 	{ id: "ml", name: "Mali", currency: "XOF", locale: "fr-ML", intensity: 0.539, price: 130, distance: "km", iso: "466" },
-	{ id: "mt", name: "Malta", currency: "EUR", locale: "mt-MT", intensity: 0.484, price: 0.13, distance: "km" },
-	{ id: "mu", name: "Mauritius", currency: "MUR", locale: "en-MU", intensity: 0.642, price: 6.42, distance: "km" },
+	{ id: "mt", name: "Malta", currency: "EUR", locale: "mt-MT", intensity: 0.484, price: 0.13, distance: "km", iso: "470" },
+	{ id: "mu", name: "Mauritius", currency: "MUR", locale: "en-MU", intensity: 0.642, price: 6.42, distance: "km", iso: "480" },
 	{ id: "mx", name: "Mexico", currency: "MXN", locale: "es-MX", intensity: 0.474, price: 1.96, distance: "km", iso: "484" },
 	{ id: "md", name: "Moldova", currency: "MDL", locale: "ro-MD", intensity: 0.633, price: 3.17, distance: "km", iso: "498" },
 	{ id: "me", name: "Montenegro", currency: "EUR", locale: "sr-ME", intensity: 0.264, price: 0.106, distance: "km", iso: "499" },
@@ -138,7 +138,7 @@ export const REGIONS: Region[] = [
 	{ id: "sn", name: "Senegal", currency: "XOF", locale: "fr-SN", intensity: 0.54, price: 105, distance: "km", iso: "686" },
 	{ id: "rs", name: "Serbia", currency: "RSD", locale: "sr-RS", intensity: 0.696, price: 13.5, distance: "km", iso: "688" },
 	{ id: "sl", name: "Sierra Leone", currency: "SLE", locale: "en-SL", intensity: 0.048, price: 5.71, distance: "km", iso: "694" },
-	{ id: "sg", name: "Singapore", currency: "SGD", locale: "en-SG", intensity: 0.497, price: 0.298, distance: "km" },
+	{ id: "sg", name: "Singapore", currency: "SGD", locale: "en-SG", intensity: 0.497, price: 0.298, distance: "km", iso: "702" },
 	{ id: "sk", name: "Slovakia", currency: "EUR", locale: "sk-SK", intensity: 0.095, price: 0.19, distance: "km", iso: "703" },
 	{ id: "si", name: "Slovenia", currency: "EUR", locale: "sl-SI", intensity: 0.183, price: 0.201, distance: "km", iso: "705" },
 	{ id: "za", name: "South Africa", currency: "ZAR", locale: "en-ZA", intensity: 0.699, price: 3.43, distance: "km", iso: "710" },

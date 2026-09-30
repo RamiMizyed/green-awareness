@@ -61,6 +61,19 @@ const tr: Dict = {
 		co2: "kWh başına CO₂",
 		perKwh: "kWh başına",
 		rank: "Listedeki {total} ülkenin {n} tanesinden daha temiz",
+		zoomIn: "Yakınlaştır",
+		zoomOut: "Uzaklaştır",
+		reset: "Tüm dünyayı göster",
+		myCountry: "Ülkem",
+		gestures: "Taşımak için sürükleyin. Yakınlaştırmak için iki parmakla sıkıştırın, çift tıklayın veya Ctrl + kaydırın.",
+		areas: {
+			europe: "Avrupa",
+			middleEast: "Orta Doğu",
+			asia: "Asya",
+			africa: "Afrika",
+			americas: "Amerika",
+			oceania: "Okyanusya",
+		},
 	},
 
 	assistant: {

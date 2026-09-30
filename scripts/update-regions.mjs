@@ -12,7 +12,8 @@ import iso from "i18n-iso-countries";
 import { countries } from "countries-list";
 
 const require = createRequire(import.meta.url);
-const atlas = require("world-atlas/countries-110m.json");
+// The detailed map (shown when zoomed in) includes even very small countries.
+const atlas = require("world-atlas/countries-50m.json");
 const mapIds = new Set(atlas.objects.countries.geometries.map((g) => String(g.id)));
 
 const UA = { "User-Agent": "Mozilla/5.0 (green-awareness region updater)" };
@@ -138,8 +139,8 @@ export interface Region {
 	intensity: number;
 	price: number;
 	distance: "km" | "mi";
-	/** ISO 3166 numeric code, as used by the world map data. Missing for
-	 *  places too small to draw at the map's scale. */
+	/** ISO 3166 numeric code, as used by the world map data. Some small
+	 *  countries only appear on the detailed map shown when zoomed in. */
 	iso?: string;
 }
 

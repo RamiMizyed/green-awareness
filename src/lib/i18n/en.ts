@@ -67,6 +67,19 @@ const en = {
 		co2: "CO₂ per kWh",
 		perKwh: "per kWh",
 		rank: "Cleaner than {n} of the {total} countries listed",
+		zoomIn: "Zoom in",
+		zoomOut: "Zoom out",
+		reset: "Show the whole world",
+		myCountry: "My country",
+		gestures: "Drag to move. Pinch, double-click or Ctrl + scroll to zoom.",
+		areas: {
+			europe: "Europe",
+			middleEast: "Middle East",
+			asia: "Asia",
+			africa: "Africa",
+			americas: "Americas",
+			oceania: "Oceania",
+		},
 	},
 
 	assistant: {
