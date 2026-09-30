@@ -71,7 +71,7 @@ const en = {
 		zoomOut: "Zoom out",
 		reset: "Show the whole world",
 		myCountry: "My country",
-		gestures: "Drag to move. Pinch, double-click or Ctrl + scroll to zoom.",
+		gestures: "Scroll or pinch to zoom, drag to move. Double-click to zoom in.",
 		areas: {
 			europe: "Europe",
 			middleEast: "Middle East",

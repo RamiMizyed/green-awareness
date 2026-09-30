@@ -276,12 +276,16 @@ export function WorldMap({
 		}
 	};
 
-	// Ctrl/⌘ + wheel zooms; a plain wheel keeps scrolling the page.
+	// The wheel zooms while the pointer is over the map. When the map can't
+	// zoom any further in that direction, the page scrolls as usual, so
+	// scrolling past a fully zoomed-out map never gets stuck.
 	useEffect(() => {
 		const svg = svgRef.current;
 		if (!svg) return;
 		const onWheel = (e: WheelEvent) => {
-			if (!e.ctrlKey && !e.metaKey) return;
+			const { k } = viewRef.current;
+			const zoomingOut = e.deltaY > 0;
+			if ((zoomingOut && k <= 1.001) || (!zoomingOut && k >= MAX_ZOOM)) return;
 			e.preventDefault();
 			const ctm = svg.getScreenCTM();
 			if (!ctm) return;

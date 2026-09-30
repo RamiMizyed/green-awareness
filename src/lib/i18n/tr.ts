@@ -65,7 +65,7 @@ const tr: Dict = {
 		zoomOut: "Uzaklaştır",
 		reset: "Tüm dünyayı göster",
 		myCountry: "Ülkem",
-		gestures: "Taşımak için sürükleyin. Yakınlaştırmak için iki parmakla sıkıştırın, çift tıklayın veya Ctrl + kaydırın.",
+		gestures: "Yakınlaştırmak için kaydırın veya iki parmakla sıkıştırın, taşımak için sürükleyin. Çift tıklamak da yakınlaştırır.",
 		areas: {
 			europe: "Avrupa",
 			middleEast: "Orta Doğu",
