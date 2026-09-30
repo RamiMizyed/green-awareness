@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowUp, Loader2, Lock, Sparkles, Undo2 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
-import { applianceVisual, getSpec } from "@/lib/data/appliances";
+import { applianceVisual } from "@/lib/data/appliances";
 import type { ApplianceItem } from "@/lib/calc";
-import { matchLocally } from "@/lib/assistant/local";
+import { understand } from "@/lib/assistant/local";
 import { itemName, specName, useLang, useT } from "@/lib/i18n";
 import type { AssistantResponse } from "@/app/api/assistant/route";
 import { cn } from "@/lib/utils";
@@ -17,28 +17,12 @@ interface Message {
 	text: string;
 	/** Ids of the list items this reply added, for showing and undoing them. */
 	added?: string[];
+	/** Items this reply removed, so Undo can put them back. */
+	removed?: ApplianceItem[];
 	undone?: boolean;
 }
 
 type NewItem = Omit<ApplianceItem, "id">;
-
-function fromSpec(specId: string, qty: number, name = ""): NewItem | null {
-	const s = getSpec(specId);
-	if (!s) return null;
-	return {
-		specId: s.id,
-		name,
-		mode: s.mode,
-		watts: s.watts,
-		hoursPerDay: s.hoursPerDay,
-		daysPerWeek: s.daysPerWeek,
-		kwhPerCycle: s.kwhPerCycle,
-		cyclesPerWeek: s.cyclesPerWeek,
-		monthsPerYear: s.monthsPerYear,
-		standbyWatts: s.standbyWatts,
-		qty,
-	};
-}
 
 export function AssistantPanel() {
 	const t = useT();
@@ -51,32 +35,49 @@ export function AssistantPanel() {
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [input, setInput] = useState("");
 	const [pending, setPending] = useState(false);
+	// Whether the optional AI is switched on; until we know, work locally.
+	const [aiEnabled, setAiEnabled] = useState(false);
 	const listRef = useRef<HTMLDivElement>(null);
 	const idRef = useRef(0);
 	const nextId = () => ++idRef.current;
 
 	useEffect(() => {
+		fetch("/api/assistant")
+			.then((r) => (r.ok ? r.json() : { enabled: false }))
+			.then((d: { enabled?: boolean }) => setAiEnabled(Boolean(d.enabled)))
+			.catch(() => setAiEnabled(false));
+	}, []);
+
+	useEffect(() => {
 		listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
 	}, [messages, pending]);
 
-	const say = (text: string, added?: string[]) => {
-		const msg: Message = { id: nextId(), role: "assistant", text, added };
+	const say = (text: string, extra?: Pick<Message, "added" | "removed">) => {
+		const msg: Message = { id: nextId(), role: "assistant", text, ...extra };
 		setMessages((m) => [...m, msg]);
 	};
 
-	/** Keyword matching in the browser, used when the AI can't be reached. */
-	const addLocally = (text: string, note: string) => {
-		const found = matchLocally(text)
-			.map((m) => {
-				if (!m.brand) return fromSpec(m.specId, m.qty);
-				// "TV (50-inch LED)" + LG -> "LG TV" ("تلفاز LG" in Arabic).
-				const base = specName(t, m.specId, m.specId).replace(/\s*\(.*?\)/g, "");
-				return fromSpec(m.specId, m.qty, lang === "ar" ? `${base} ${m.brand}` : `${m.brand} ${base}`);
-			})
-			.filter((x): x is NewItem => x !== null);
-		if (found.length === 0) return say(`${note} ${t.assistant.nothing}`);
-		const ids = addItems(found);
-		say(`${note} ${t.assistant.added(found.length)}.`, ids);
+	/** The free, in-browser helper. `note` prefixes the reply when the AI failed. */
+	const handleLocally = (text: string, note = "") => {
+		const { add, remove } = understand(text);
+		const prefix = note ? `${note} ` : "";
+
+		if (remove.length) {
+			const gone = items.filter((it) => remove.includes(it.specId));
+			if (!gone.length) return say(prefix + t.assistant.notFound);
+			removeItems(gone.map((it) => it.id));
+			return say(prefix + t.assistant.removed(gone.length), { removed: gone });
+		}
+
+		if (!add.length) return say(prefix + t.assistant.nothing);
+		const newItems: NewItem[] = add.map(({ brand, ...it }) => {
+			if (!brand) return { ...it, name: "" };
+			// "TV (50-inch LED)" + LG -> "LG TV" ("تلفاز LG" in Arabic).
+			const base = specName(t, it.specId, it.specId).replace(/\s*\(.*?\)/g, "");
+			return { ...it, name: lang === "ar" ? `${base} ${brand}` : `${brand} ${base}` };
+		});
+		const ids = addItems(newItems);
+		say(`${prefix}${t.assistant.added(ids.length)}.`, { added: ids });
 	};
 
 	const send = async (raw: string) => {
@@ -85,8 +86,10 @@ export function AssistantPanel() {
 		setInput("");
 		const history = [...messages, { id: nextId(), role: "user" as const, text }];
 		setMessages(history);
-		setPending(true);
 
+		if (!aiEnabled) return handleLocally(text);
+
+		setPending(true);
 		try {
 			const res = await fetch("/api/assistant", {
 				method: "POST",
@@ -99,26 +102,27 @@ export function AssistantPanel() {
 				}),
 			});
 
-			if (res.status === 429) return addLocally(text, t.assistant.limit);
-			if (!res.ok) return addLocally(text, t.assistant.offline);
+			if (res.status === 429) return handleLocally(text, t.assistant.limit);
+			if (!res.ok) return handleLocally(text, t.assistant.offline);
 
 			const data = (await res.json()) as AssistantResponse;
 			const newItems: NewItem[] = data.items.filter((it) => it.qty > 0);
 			const ids = newItems.length ? addItems(newItems) : undefined;
 			say(
 				data.reply || (ids ? `${t.assistant.added(ids.length)}.` : t.assistant.nothing),
-				ids
+				{ added: ids }
 			);
 		} catch {
-			addLocally(text, t.assistant.offline);
+			handleLocally(text, t.assistant.offline);
 		} finally {
 			setPending(false);
 		}
 	};
 
 	const undo = (msg: Message) => {
-		if (!msg.added) return;
-		removeItems(msg.added);
+		if (msg.added) removeItems(msg.added);
+		// addItems gives the restored items fresh ids.
+		if (msg.removed) addItems(msg.removed);
 		setMessages((m) => m.map((x) => (x.id === msg.id ? { ...x, undone: true } : x)));
 	};
 
@@ -202,7 +206,7 @@ export function AssistantPanel() {
 
 			<p className="mt-3 flex gap-1.5 text-xs text-muted-foreground">
 				<Lock className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-				{t.assistant.privacy}
+				{aiEnabled ? t.assistant.privacy : t.assistant.localPrivacy}
 			</p>
 		</div>
 	);
@@ -211,25 +215,33 @@ export function AssistantPanel() {
 function AssistantBubble({ message, onUndo }: { message: Message; onUndo: () => void }) {
 	const t = useT();
 	const items = useAppStore((s) => s.items);
-	const added = message.added
-		? items.filter((it) => message.added!.includes(it.id))
-		: [];
+	// Added items are read live, so edits and removals in the list show here too.
+	const added = message.added ? items.filter((it) => message.added!.includes(it.id)) : [];
+	const removed = message.removed ?? [];
+	const chips = added.length ? added : removed;
 
 	return (
 		<div className="max-w-[90%] self-start rounded-2xl rounded-es-md bg-card px-4 py-3 shadow-sm">
 			<p className="text-base">
 				<span className="sr-only">{t.assistant.ai}: </span>
-				{message.undone ? t.assistant.undone : message.text}
+				{message.undone
+					? message.removed
+						? t.assistant.restored
+						: t.assistant.undone
+					: message.text}
 			</p>
-			{!message.undone && added.length > 0 && (
+			{!message.undone && chips.length > 0 && (
 				<>
 					<ul className="mt-3 flex flex-wrap gap-2">
-						{added.map((it) => {
+						{chips.map((it) => {
 							const v = applianceVisual(it.specId);
 							return (
 								<li
 									key={it.id}
-									className="flex items-center gap-2 rounded-xl bg-muted/70 py-1 pe-3 ps-1 text-sm font-medium">
+									className={cn(
+										"flex items-center gap-2 rounded-xl bg-muted/70 py-1 pe-3 ps-1 text-sm font-medium",
+										!added.length && "text-muted-foreground line-through"
+									)}>
 									<IconTile icon={v.icon} tone={v.tone} size="sm" className="size-8 rounded-lg [&>svg]:size-4" />
 									{itemName(t, it) || t.step2.unnamed}
 									{it.qty > 1 && <span className="text-muted-foreground">×{it.qty}</span>}
@@ -240,9 +252,7 @@ function AssistantBubble({ message, onUndo }: { message: Message; onUndo: () => 
 					<button
 						type="button"
 						onClick={onUndo}
-						className={cn(
-							"mt-2 inline-flex h-9 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-						)}>
+						className="mt-2 inline-flex h-9 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
 						<Undo2 className="size-4" aria-hidden />
 						{t.assistant.undo}
 					</button>

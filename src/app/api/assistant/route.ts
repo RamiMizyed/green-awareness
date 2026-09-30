@@ -119,6 +119,11 @@ function tidy(item: AssistantItem): AssistantItem {
 
 let client: Anthropic | null = null;
 
+/** Lets the page know whether to use the AI or its free in-browser matcher. */
+export function GET() {
+	return NextResponse.json({ enabled: Boolean(process.env.ANTHROPIC_API_KEY) });
+}
+
 export async function POST(req: Request) {
 	if (!process.env.ANTHROPIC_API_KEY) {
 		return NextResponse.json({ error: "unavailable" }, { status: 503 });

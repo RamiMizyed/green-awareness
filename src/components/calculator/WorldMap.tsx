@@ -76,22 +76,16 @@ export function WorldMap({
 	const isSelected = (iso: string) =>
 		selectedId === "eu" ? EU_MEMBERS.has(iso) : BY_ISO.get(iso)?.id === selectedId;
 
-	const showTip = (region: Region, e: React.PointerEvent | React.FocusEvent) => {
+	const showTip = (region: Region, e: React.PointerEvent) => {
 		const box = boxRef.current?.getBoundingClientRect();
-		if (!box) return;
-		const target = (e.target as SVGPathElement).getBoundingClientRect();
-		const x = "clientX" in e ? e.clientX : target.left + target.width / 2;
-		const y = "clientY" in e ? e.clientY : target.top;
-		setHover({ region, x: x - box.left, y: y - box.top });
+		if (box) setHover({ region, x: e.clientX - box.left, y: e.clientY - box.top });
 	};
 
 	return (
 		<div ref={boxRef} className="relative" onPointerLeave={() => setHover(null)}>
-			<svg
-				viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-				className="h-auto w-full"
-				role="group"
-				aria-label={t.map.mapLabel}>
+			{/* Pointer-only shortcut; keyboard and screen-reader users get the
+			    country list below, which offers the same choices. */}
+			<svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="h-auto w-full" aria-hidden>
 				{!countries && (
 					<rect width={WIDTH} height={HEIGHT} rx={24} className="animate-pulse fill-muted" />
 				)}
@@ -108,29 +102,17 @@ export function WorldMap({
 							/>
 						);
 					}
-					const name = regionName(t, lang, region.id, region.name);
 					return (
 						<path
 							key={id}
 							d={d}
-							role="button"
-							tabIndex={0}
-							aria-label={name}
-							aria-pressed={selected}
+							data-region={region.id}
 							fill={intensityColor(region.intensity)}
-							className="cursor-pointer outline-none transition-opacity hover:opacity-80 focus-visible:opacity-80"
+							className="cursor-pointer outline-none transition-opacity hover:opacity-80"
 							stroke={selected ? "var(--foreground)" : "var(--card)"}
 							strokeWidth={selected ? 2.5 : 0.6}
 							onClick={() => onSelect(region.id)}
-							onKeyDown={(e) => {
-								if (e.key === "Enter" || e.key === " ") {
-									e.preventDefault();
-									onSelect(region.id);
-								}
-							}}
 							onPointerMove={(e) => e.pointerType === "mouse" && showTip(region, e)}
-							onFocus={(e) => showTip(region, e)}
-							onBlur={() => setHover(null)}
 						/>
 					);
 				})}

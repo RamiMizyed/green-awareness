@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 	metadataBase: new URL("https://green-awareness.org"), // <-- replace with your domain
 	title: "Green Awareness | Home Energy & Carbon Footprint Calculator",
 	description:
-		"Find out what your home appliances cost you and how much CO₂ they're responsible for, with local prices and grid data for 29 regions. Get a personal plan to cut your bill and your footprint.",
+		"Find out what your home appliances cost you and how much CO₂ they're responsible for, with local prices and grid data for over 140 countries. Get a personal plan to cut your bill and your footprint.",
 	applicationName: "Green Awareness",
 	keywords: [
 		"Green Awareness",
